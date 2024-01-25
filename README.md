@@ -1,8 +1,17 @@
 
-  - [*To the reader*](#to-the-reader)
-  - [Part 0. Proposal](#part-0-proposal)
   - [Part I. Work out functionality ✅](#part-i-work-out-functionality-)
-      - [Try it out](#try-it-out)
+      - [Intro Thoughts](#intro-thoughts)
+      - [Status Quo: 1. compute, 2. ggproto, 3. define
+        layer](#status-quo-1-compute-2-ggproto-3-define-layer)
+      - [Experimental: `define_temp_geom()` combines 2 and 3 in using a
+        temp
+        stat](#experimental-define_temp_geom-combines-2-and-3-in-using-a-temp-stat)
+          - [Try it out](#try-it-out)
+          - [Another method, even more experimental … using
+            assign…](#another-method-even-more-experimental--using-assign)
+          - [wrapping this..](#wrapping-this)
+          - [Can you define a second w/ the same
+            StatTemp…](#can-you-define-a-second-w-the-same-stattemp)
   - [Part II. Packaging and documentation 🚧
     ✅](#part-ii-packaging-and-documentation--)
       - [Phase 1. Minimal working
@@ -54,68 +63,281 @@
         package)](#non-developer-introduction-to-package-and-test-of-installed-package)
       - [Example using package](#example-using-package)
 
-# *To the reader*
-
-Welcome to the R package building helper *readme2pkg.template*\!
-
-Below, is a readme that provides steps for building a package. This
-readme acts as a worksheet, checklist, and control document as functions
-used in package building are included within.
-
-We’ll use the `{readme2pkg}` helper package to send code chunks to
-different directories in the package.
-
-To install `{readme2pkg}`:
-
-``` 
-
-remotes::install.github("EvaMaeRey/readme2pkg")
-```
-
-# Part 0. Proposal
-
-Proposing the {xxxx} package\! 🦄
+Proposing the {ggtemp} package\! 🦄
 <!-- (typical package introduction write up; but actually aspirational) -->
 
-The goal of {xxxx} is to make … easier.
+The goal of {ggtemp} is to make writing some quick useful extension
+functions succinct. Right now, the amount of code required to do some
+things that I think should be more routine for analysts, is a bit of a
+mouthful. Specifically, defining new geom\_\* and stat\_\* layers
+outside of the context of a package.
 
-Without the package, we live in the effort-ful world that follows 🏋:
-
-``` r
-x <- 4
-
-2*x
-```
-
-With the {xxxx} package, we’ll live in a different world (🦄 🦄 🦄) where
+With the {ggtemp} package, we’ll live in a different world (🦄 🦄 🦄) where
 the task is a snap 🫰:
 
-Proposed API:
+Proposed API where we create a new geom\_\* layer function
 
 ``` 
+library(ggtemp)
 
-library(xxxxx)
+compute_panel_circle <- function(data, scales){
 
-xxxxx::times_two(x = 4)
+data |> 
+  some_compute()
+
+}
+
+
+geom_circle <- function(...){
+
+define_layer_compute_panel(geom = "path",
+compute_panel = compute_panel_circle,
+required_aes = c("x0", "y0", "r"), ...)
+
+}
+
 ```
 
 # Part I. Work out functionality ✅
 
-Here is a function that will do some work…
+## Intro Thoughts
+
+What if you just want to define a basic computational engine (geom\_\*
+or stat\_\* function) on the fly in a script. It seems like it requires
+a good amount of code, but there are things that repeat. Below, we see
+if we define a StatTemp within a function, and use that function to
+remove some of the repetition for vanilla-y extensions.
+
+TLDR: This seems to work, and surprisingly well (??). I thought I’d only
+be able to use StatTemp once, but you seem to be able to define multiple
+geoms\_\* functions with the same define\_temp\_geom wrapper…
+
+## Status Quo: 1. compute, 2. ggproto, 3. define layer
 
 ``` r
-times_two <- function(x){
+library(tidyverse)
+#> ── Attaching core tidyverse packages ─────────────────── tidyverse 2.0.0.9000 ──
+#> ✔ dplyr     1.1.0          ✔ readr     2.1.4     
+#> ✔ forcats   1.0.0          ✔ stringr   1.5.0     
+#> ✔ ggplot2   3.4.4.9000     ✔ tibble    3.2.1     
+#> ✔ lubridate 1.9.2          ✔ tidyr     1.3.0     
+#> ✔ purrr     1.0.1          
+#> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+#> ✖ dplyr::filter() masks stats::filter()
+#> ✖ dplyr::lag()    masks stats::lag()
+#> ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+compute_panel_equilateral <- function(data, scales, n = 15){
   
-  x*2
+  data |> 
+    mutate(group = row_number()) |> 
+    crossing(tibble(z = 0:n)) |>
+    mutate(around = 2*pi*z/max(z)) |> 
+    mutate(x = x0 + cos(around)*r,
+           y = y0 + sin(around)*r) 
+  
+}
+
+StatCircle <- ggproto(
+  `_class` = "StatCircle",
+  `_inherit` = ggplot2::Stat,
+  compute_panel = compute_panel_equilateral,
+  required_aes = c("x0", "y0", "r"))
+
+geom_circle <- function(
+  mapping = NULL,
+  data = NULL,
+  position = "identity",
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE, ...) {
+  ggplot2::layer(
+    stat = StatCircle,  # proto object from Step 2
+    geom = ggplot2::GeomPolygon,  # inherit other behavior
+    data = data,
+    mapping = mapping,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(na.rm = na.rm, ...)
+  )
+}
+
+data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |> 
+  ggplot() + 
+  aes(x0 = x0, y0 = y0, r = r) + 
+  geom_circle() + 
+  aes(fill = r)
+```
+
+![](README_files/figure-gfm/cars-1.png)<!-- -->
+
+## Experimental: `define_temp_geom()` combines 2 and 3 in using a temp stat
+
+``` r
+define_temp_geom_compute_panel <- function(
+  required_aes,
+  compute_panel, 
+  geom = ggplot2::GeomPoint, 
+  mapping = NULL,
+  data = NULL,
+  position = "identity",
+  na.rm = FALSE,
+  show.legend = NA,
+  inherit.aes = TRUE, 
+  ...) {
+
+StatTemp <- ggproto(
+  `_class` = "StatTemp",
+  `_inherit` = ggplot2::Stat,
+  compute_panel = compute_panel,
+  required_aes = required_aes)
+
+  ggplot2::layer(
+    stat = StatTemp,  # proto object from Step 2
+    geom = geom,  # inherit other behavior
+    data = data,
+    mapping = mapping,
+    position = position,
+    show.legend = show.legend,
+    inherit.aes = inherit.aes,
+    params = list(na.rm = na.rm, ...)
+  )
+}
+```
+
+### Try it out
+
+#### abbreviated definition `geom_circle()` using `define_temp_geom_compute_panel`
+
+``` r
+compute_panel_circle <- function(data, scales, n = 15){
+  
+  data |> 
+    mutate(group = row_number()) |> 
+    crossing(tibble(z = 0:n)) |>
+    mutate(around = 2*pi*z/max(z)) |> 
+    mutate(x = x0 + cos(around)*r,
+           y = y0 + sin(around)*r) 
+  
+}
+
+geom_circle <- function(...){
+  
+  define_temp_geom_compute_panel(
+    required_aes = c("x0", "y0", "r"),
+    compute_panel = compute_panel_circle,
+    geom = ggplot2::GeomPath,
+    ...)
   
 }
 ```
 
-## Try it out
+### Another method, even more experimental … using assign…
 
 ``` r
-times_two(4)
+assign(x = "geom_circle", 
+       value = 
+  
+  function(...){
+  
+  define_temp_geom_compute_panel(
+    required_aes = c("x0", "y0", "r"),
+    compute_panel = compute_panel_circle,
+    geom = ggplot2::GeomPath,
+    ...)
+  
+}
+)
 ```
+
+### wrapping this..
+
+``` r
+
+create_layer_temp_panel <- function(fun_name ="geom_circle", 
+                                    compute_panel = compute_panel_circle,
+                                    required_aes = c("x0", "y0", "r")){
+  
+  
+  assign(x = fun_name, value = 
+  
+  function(...){
+  
+  define_temp_geom_compute_panel(
+    required_aes = c("x0", "y0", "r"),
+    compute_panel = compute_panel,
+    geom = ggplot2::GeomPath,
+    ...)
+  
+},
+pos = 1
+)
+  
+}
+```
+
+``` r
+create_layer_temp_panel("stat_circle")
+```
+
+#### use `geom_circle()`
+
+``` r
+library(ggplot2)
+data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
+  ggplot() +
+  aes(x0 = x0, y0 = y0, r = r) +
+  stat_circle() +
+  aes(fill = r)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+### Can you define a second w/ the same StatTemp…
+
+#### define geom\_heart
+
+``` r
+compute_panel_heart <- function(data, scales){
+
+  data %>%
+  mutate(group = row_number()) %>%
+  tidyr::crossing(around = 0:15/15) %>%
+    dplyr::mutate(
+      y = y0 + r * (
+        .85 * cos(2*pi*around)
+        - .35 * cos(2 * 2*pi*around)
+        - .25 * cos(3 * 2*pi*around)
+        - .05 * cos(4 * 2*pi*around)
+      ),
+      x = x0 + r * (sin(2*pi*around)^3))
+
+}
+
+geom_heart <- function(...){
+
+    define_temp_geom_compute_panel(
+      required_aes = c("x0", "y0", "r"),
+      compute_panel = compute_panel_heart,
+      geom = ggplot2::GeomPolygon,
+      ...)
+
+  }
+```
+
+#### try using both geom\_heart and geom\_circle together…
+
+``` r
+data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
+  ggplot() +
+  aes(x0 = x0, y0 = y0, r = r) +
+  geom_heart(alpha = .3) +
+  geom_circle(color = "red", 
+              data = data.frame(x0 = 4,y0 = 2, r = 1)) + 
+  annotate(geom = "point", x = .5, y = .5, size = 8, color = "green")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 # Part II. Packaging and documentation 🚧 ✅
 
@@ -148,7 +370,7 @@ usethis::use_package("ggplot2")
 Use new {readme2pkg} function to do this from readme…
 
 ``` r
-readme2pkg::chunk_to_r("times_two")
+readme2pkg::chunk_to_r("ggtemp_function")
 ```
 
 ### Bit E. Run `devtools::check()` and addressed errors. 🚧 ✅
@@ -165,7 +387,7 @@ devtools::build()
 
 ### Bit G. Write and test traditional README that uses built package. 🚧 ✅
 
-The goal of the {xxxx} package is to …
+The goal of the {ggtemp} package is to …
 
 Install package with:
 
@@ -174,20 +396,54 @@ Install package with:
 Then…
 
 ``` r
-library(readme2pkg.template)  ##<< change to your package name here
-times_two(10)
+library(ggtemp)  ##<< change to your package name here
+
+compute_panel_circle <- function(data, scales, n = 15){
+  
+  data |> 
+    mutate(group = row_number()) |> 
+    crossing(tibble(z = 0:n)) |>
+    mutate(around = 2*pi*z/max(z)) |> 
+    mutate(x = x0 + cos(around)*r,
+           y = y0 + sin(around)*r) 
+  
+}
+
+geom_circle_points <- function(...){
+  
+  ggtemp:::define_temp_geom_compute_panel(
+    required_aes = c("x0", "y0", "r"),
+    compute_panel = compute_panel_circle,
+    geom = ggplot2::GeomPoint,
+    ...)
+  
+}
+
+
+library(ggplot2)
+ggplot(cars) +
+  aes(x0 = speed, y0 = dist, r = 1) + 
+  geom_circle_points()
 ```
+
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 ### Bit H. Chosen a license? 🚧 ✅
 
 ``` r
 usethis::use_mit_license()
+#> ✔ Setting active project to '/Users/evangelinereynolds/Google
+#> Drive/r_packages/ggtemp'
 ```
 
 ### Bit I. Add lifecycle badge (experimental)
 
 ``` r
 usethis::use_lifecycle_badge("experimental")
+#> • Copy and paste the following lines into 'README.Rmd':
+#>   <!-- badges: start -->
+#>   [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+#>   <!-- badges: end -->
 ```
 
 ## Phase 2: Listen & iterate 🚧 ✅
@@ -246,12 +502,21 @@ Here I just want to print the packages and the versions
 ``` r
 all <- sessionInfo() |> print() |> capture.output()
 all[11:17]
+#> [1] ""                                                                         
+#> [2] "attached base packages:"                                                  
+#> [3] "[1] stats     graphics  grDevices utils     datasets  methods   base     "
+#> [4] ""                                                                         
+#> [5] "other attached packages:"                                                 
+#> [6] " [1] ggtemp_0.0.0.9000    lubridate_1.9.2      forcats_1.0.0       "      
+#> [7] " [4] stringr_1.5.0        dplyr_1.1.0          purrr_1.0.1         "
 ```
 
 ## `devtools::check()` report
 
 ``` r
 devtools::check(pkg = ".")
+#> ℹ Updating ggtemp documentation
+#> ℹ Loading ggtemp
 ```
 
 ## Non-developer introduction to package (and test of installed package)
