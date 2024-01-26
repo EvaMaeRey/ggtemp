@@ -1,4 +1,4 @@
-define_temp_geom_compute_panel <- function(
+define_layer_temp <- function(
   required_aes,
   compute_panel = NULL, 
   compute_group = NULL,

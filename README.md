@@ -83,21 +83,27 @@ Proposed API where we create a new geom\_\* layer function
 
     library(ggtemp)
     
-    compute_panel_circle <- function(data, scales){
-    
-    data |> 
-      some_compute()
-    
-    }
-    
-    
-    geom_circle <- function(...){
-    
-    define_layer_compute_panel(geom = "path",
-    compute_panel = compute_panel_circle,
-    required_aes = c("x0", "y0", "r"), ...)
+    # 1. work out some compute
+    compute_group_xmean <- function(data, scales){
+      
+      data |> # a dataframe with vars x, the required aesthetic
+        summarize(x = mean(x)) |>
+        mutate(xend = x) |>
+        mutate(y = -Inf, yend = Inf)
     
     }
+    
+    # 2. create layer function based on compute (geom_xmean)
+    create_layer_temp(fun_name = "geom_xmean",
+                      compute_group = compute_group_xmean,
+                      required_aes = "x",
+                      geom = "segment")
+                      
+    # 3. Use temp layer!                   
+    ggplot(data = cars) + 
+      aes(x = speed, y = dist) + 
+      geom_point() + 
+      geom_xmean()
 
 # Part I. Work out functionality ✅
 
@@ -175,7 +181,7 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
 ## Experimental: `define_temp_geom()` combines 2 and 3 in using a temp stat
 
 ``` r
-define_temp_geom_compute_panel <- function(
+define_layer_temp <- function(
   required_aes,
   compute_panel = NULL, 
   compute_group = NULL,
@@ -219,7 +225,7 @@ StatTemp <- ggproto(
 
 ### Try it out
 
-#### abbreviated definition `geom_circle()` using `define_temp_geom_compute_panel`
+#### abbreviated definition `geom_circle()` using `define_layer_temp`
 
 ``` r
 compute_panel_circle <- function(data, scales, n = 15){
@@ -235,7 +241,7 @@ compute_panel_circle <- function(data, scales, n = 15){
 
 geom_circle <- function(...){
   
-  define_temp_geom_compute_panel(
+  define_layer_temp(
     required_aes = c("x0", "y0", "r"),
     compute_panel = compute_panel_circle,
     geom = ggplot2::GeomPath,
@@ -280,7 +286,7 @@ compute_panel_heart <- function(data, scales){
 
 geom_heart <- function(...){
 
-    define_temp_geom_compute_panel(
+    define_layer_temp(
       required_aes = c("x0", "y0", "r"),
       compute_panel = compute_panel_heart,
       geom = ggplot2::GeomPolygon,
@@ -311,7 +317,7 @@ assign(x = "geom_circle",
   
   function(...){
   
-  define_temp_geom_compute_panel(
+  define_layer_temp(
     required_aes = c("x0", "y0", "r"),
     compute_panel = compute_panel_circle,
     geom = ggplot2::GeomPath,
@@ -324,7 +330,7 @@ assign(x = "geom_circle",
 ### wrapping this..
 
 ``` r
-create_layer_temp_panel <- function(fun_name ="geom_circle", 
+create_layer_temp <- function(fun_name ="geom_circle", 
                                     compute_panel = NULL,
                                     compute_group = NULL,
                                     required_aes = c("x0", "y0", "r"),
@@ -334,7 +340,7 @@ create_layer_temp_panel <- function(fun_name ="geom_circle",
          value = function(...){
            
   
-  define_temp_geom_compute_panel(
+  define_layer_temp(
     required_aes = required_aes,
     compute_panel = compute_panel,
     compute_group = compute_group,
@@ -349,7 +355,7 @@ create_layer_temp_panel <- function(fun_name ="geom_circle",
 #### and trying it out
 
 ``` r
-create_layer_temp_panel(fun_name = "stat_circle", 
+create_layer_temp(fun_name = "stat_circle", 
                         compute_panel = compute_panel_circle)
 
 
@@ -373,10 +379,10 @@ compute_group_xmean <- function(data, scales){
 
 }
 
-create_layer_temp_panel(fun_name = "geom_xmean",
-                        compute_group = compute_group_xmean,
-                        required_aes = "x",
-                        geom = "segment")
+create_layer_temp(fun_name = "geom_xmean",
+                  compute_group = compute_group_xmean,
+                  required_aes = "x",
+                  geom = "segment")
 
 ggplot(cars) + 
   aes(x = speed, x0 = speed, y0 =  dist, r = 1) + 
@@ -424,7 +430,7 @@ usethis::use_package("ggplot2")
 Use new {readme2pkg} function to do this from readme…
 
 ``` r
-readme2pkg::chunk_to_r("ggtemp_function")
+readme2pkg::chunk_to_r("define_layer_temp")
 ```
 
 ### Bit E. Run `devtools::check()` and addressed errors. 🚧 ✅
@@ -465,7 +471,7 @@ compute_panel_circle <- function(data, scales, n = 15){
 
 geom_circle_points <- function(...){
   
-  ggtemp:::define_temp_geom_compute_panel(
+  ggtemp:::define_layer_temp(
     required_aes = c("x0", "y0", "r"),
     compute_panel = compute_panel_circle,
     geom = ggplot2::GeomPoint,
