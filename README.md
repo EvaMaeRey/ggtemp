@@ -93,7 +93,7 @@ Proposed API where we create a new geom\_\* layer function
     
     }
     
-    # 2. create layer function based on compute (geom_xmean)
+    # 2. create layer function based on compute geom_xmean)
     create_layer_temp(fun_name = "geom_xmean",
                       compute_group = compute_group_xmean,
                       required_aes = "x",
