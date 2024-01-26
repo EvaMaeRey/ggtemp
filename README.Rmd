@@ -18,9 +18,9 @@ knitr::opts_chunk$set(
 Proposing the {ggtemp} package! 🦄 
 <!-- (typical package introduction write up; but actually aspirational) -->
 
-The goal of {ggtemp} is to make writing some quick useful extension functions succinct. Right now, the amount of code required to do some things that I think should be more routine for analysts, is a bit of a mouthful.  Specifically, defining new geom_* and stat_* layers outside of the context of a package.  
+The goal of {ggtemp} is to make writing some quick useful extension functions succinct. Right now, the amount of code required to write extensions is a bit of a mouthful, and could feel prohibitive for analysts.  Specifically, defining new geom_* and stat_* layers outside of the context of a package, I believe, is not common, but could be useful. However the usual amount of code required to make such definitions, might feel like it 'gunks up' your script.
 
-With the {ggtemp} package, we'll live in a different world (🦄 🦄 🦄) where the task is a snap 🫰: 
+With the {ggtemp} package, we'll live in a different world (🦄 🦄 🦄) where the task is a snap 🫰, and the readability of the in-script definition of a geom_* or stat_* function is quite succinct: 
 
 Proposed API where we create a new geom_* layer function
 
@@ -42,8 +42,6 @@ compute_panel = compute_panel_circle,
 required_aes = c("x0", "y0", "r"), ...)
 
 }
-
-
 ```
 
 
@@ -110,7 +108,8 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
 ```{r ggtemp_function}
 define_temp_geom_compute_panel <- function(
   required_aes,
-  compute_panel, 
+  compute_panel = NULL, 
+  compute_group = NULL,
   geom = ggplot2::GeomPoint, 
   mapping = NULL,
   data = NULL,
@@ -120,11 +119,21 @@ define_temp_geom_compute_panel <- function(
   inherit.aes = TRUE, 
   ...) {
 
+  if(!is.null(compute_panel)){
 StatTemp <- ggproto(
   `_class` = "StatTemp",
   `_inherit` = ggplot2::Stat,
   compute_panel = compute_panel,
   required_aes = required_aes)
+  }
+  
+  if(!is.null(compute_group)){
+StatTemp <- ggproto(
+  `_class` = "StatTemp",
+  `_inherit` = ggplot2::Stat,
+  compute_group = compute_group,
+  required_aes = required_aes)
+  }  
 
   ggplot2::layer(
     stat = StatTemp,  # proto object from Step 2
@@ -138,11 +147,6 @@ StatTemp <- ggproto(
   )
 }
 ```
-
-
-
-
-
 
 ### Try it out
 
@@ -171,61 +175,6 @@ geom_circle <- function(...){
 }
 ```
 
-### Another method, even more experimental ... using assign... 
-
-```{r}
-assign(x = "geom_circle", 
-       value = 
-  
-  function(...){
-  
-  define_temp_geom_compute_panel(
-    required_aes = c("x0", "y0", "r"),
-    compute_panel = compute_panel_circle,
-    geom = ggplot2::GeomPath,
-    ...)
-  
-}
-)
-
-```
-
-### wrapping this..
-
-
-```{r}
-
-create_layer_temp_panel <- function(fun_name ="geom_circle", 
-                                    compute_panel = compute_panel_circle,
-                                    required_aes = c("x0", "y0", "r")){
-  
-  
-  assign(x = fun_name, value = 
-  
-  function(...){
-  
-  define_temp_geom_compute_panel(
-    required_aes = c("x0", "y0", "r"),
-    compute_panel = compute_panel,
-    geom = ggplot2::GeomPath,
-    ...)
-  
-},
-pos = 1
-)
-  
-}
-
-
-```
-
-
-```{r}
-create_layer_temp_panel("stat_circle")
-```
-
-
-
 
 
 #### use `geom_circle()`
@@ -235,7 +184,7 @@ library(ggplot2)
 data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
   ggplot() +
   aes(x0 = x0, y0 = y0, r = r) +
-  stat_circle() +
+  geom_circle() +
   aes(fill = r)
 ```
 
@@ -281,8 +230,101 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
   geom_circle(color = "red", 
               data = data.frame(x0 = 4,y0 = 2, r = 1)) + 
   annotate(geom = "point", x = .5, y = .5, size = 8, color = "green")
+```
+
+
+
+
+
+
+### Another method, even more experimental ... using assign... 
+
+```{r}
+assign(x = "geom_circle", 
+       value = 
+  
+  function(...){
+  
+  define_temp_geom_compute_panel(
+    required_aes = c("x0", "y0", "r"),
+    compute_panel = compute_panel_circle,
+    geom = ggplot2::GeomPath,
+    ...)
+  
+}
+)
 
 ```
+
+### wrapping this..
+
+
+```{r}
+create_layer_temp_panel <- function(fun_name ="geom_circle", 
+                                    compute_panel = NULL,
+                                    compute_group = NULL,
+                                    required_aes = c("x0", "y0", "r"),
+                                    geom = "point"){
+
+  assign(x = fun_name, 
+         value = function(...){
+           
+  
+  define_temp_geom_compute_panel(
+    required_aes = required_aes,
+    compute_panel = compute_panel,
+    compute_group = compute_group,
+    geom = geom,
+    ...)  },
+  pos = 1
+  )
+  
+}
+```
+
+
+
+#### and trying it out
+
+```{r}
+create_layer_temp_panel(fun_name = "stat_circle", 
+                        compute_panel = compute_panel_circle)
+
+
+library(ggplot2)
+ggplot(cars) + 
+  aes(x0 = speed, y0 =  dist, r = 1) + 
+  stat_circle()
+
+```
+
+
+# another text
+
+```{r}
+compute_group_xmean <- function(data, scales){
+  
+  data |> # a dataframe with vars x, the required aesthetic
+    summarize(x = mean(x)) |>
+    mutate(xend = x) |>
+    mutate(y = -Inf, yend = Inf)
+
+}
+
+create_layer_temp_panel(fun_name = "geom_xmean",
+                        compute_group = compute_group_xmean,
+                        required_aes = "x",
+                        geom = "segment")
+
+ggplot(cars) + 
+  aes(x = speed, x0 = speed, y0 =  dist, r = 1) + 
+  stat_circle() + 
+  geom_xmean() + 
+  aes(color = speed > 18)
+
+```
+
+
 
 
 
