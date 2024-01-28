@@ -367,6 +367,41 @@ ggplot(cars) +
 
 ![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
+``` r
+compute_panel_star <- function(data, scales, n_points = 5, prop_inner_r){
+
+  n_vertices <- n_points * 2
+  
+  data %>%
+  mutate(group = row_number()) %>%
+  tidyr::crossing(around = 2*pi*0:(n_vertices)/(n_vertices)) %>%
+    dplyr::mutate(
+      y = y0 + (r - c(rep(c(0,.3), 5), 0)
+                ) * sin(around) ,
+      x = x0 + (r - c(rep(c(0,.3), 5), 0)
+                ) * cos(around)
+      ) 
+
+}
+
+
+
+
+create_layer_temp(fun_name = "stat_star", 
+                  compute_panel = compute_panel_star,
+                  required_aes = c("x0", "y0", "r"),
+                  geom = "path")
+
+
+library(ggplot2)
+ggplot(cars[1:5,] ) + 
+  aes(x0 = speed, y0 =  dist, r = 1) + 
+  stat_star() + 
+  coord_equal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
 # another text
 
 ``` r
@@ -397,7 +432,7 @@ ggplot(cars) +
 #>   variable into a factor?
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 # Part II. Packaging and documentation 🚧 ✅
 
@@ -486,7 +521,7 @@ ggplot(cars) +
   geom_circle_points()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ### Bit H. Chosen a license? 🚧 ✅
 
