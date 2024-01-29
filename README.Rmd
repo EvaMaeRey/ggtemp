@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 Proposing the {ggtemp} package! 🦄 
 <!-- (typical package introduction write up; but actually aspirational) -->
 
-The goal of {ggtemp} is to make writing some quick useful extension functions succinct. Right now, the amount of code required to write extensions is a bit of a mouthful, and could feel prohibitive for analysts.  Specifically, defining new geom_* and stat_* layers outside of the context of a package, I believe, is not common, but could be useful. However the usual amount of code required to make such definitions, might feel like it 'gunks up' your script.
+The goal of {ggtemp} is to make writing some quick useful extension functions succinct. Right now, the amount of code required to write extensions is a bit of a mouthful, and could feel prohibitive for day-to-day analysis.  Specifically, defining new geom_* and stat_* layers outside of the context of a package, I believe, is not common, but could be quite useful, ultimately making plot builds intiuitive, fun, and readable. However the usual amount of code required to make define new geom_* or stat_* functions, might feel like it 'gunks up' your script.
 
 With the {ggtemp} package, we'll live in a different world (🦄 🦄 🦄) where the task is a snap 🫰, and the readability of the in-script definition of a geom_* or stat_* function is quite succinct: 
 
@@ -42,6 +42,7 @@ create_layer_temp(fun_name = "geom_xmean",
                   compute_group = compute_group_xmean,
                   required_aes = "x",
                   geom = "segment")
+                  
                   
 # 3. Use temp layer!                   
 ggplot(data = cars) + 
@@ -108,7 +109,7 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
   aes(fill = r)
 ```
 
-## Experimental:  `define_temp_geom()` combines 2 and 3 in using a temp stat
+## Experimental:  `define_layer_temp()` combines 2 and 3 in using a temp stat
 
 
 ```{r define_layer_temp}
@@ -243,9 +244,11 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
 
 
 
-### Another method, even more experimental ... using assign... 
+## And `create_layer_temp` method, even more experimental (but feeling nicer to use)
 
-```{r}
+### First just checking out how assign works.
+
+```{r }
 assign(x = "geom_circle", 
        value = 
   
@@ -259,13 +262,11 @@ assign(x = "geom_circle",
   
 }
 )
-
 ```
 
-### wrapping this..
+### wrapping this...
 
-
-```{r}
+```{r create_layer_temp}
 create_layer_temp <- function(fun_name ="geom_circle", 
                                     compute_panel = NULL,
                                     compute_group = NULL,
@@ -275,7 +276,6 @@ create_layer_temp <- function(fun_name ="geom_circle",
   assign(x = fun_name, 
          value = function(...){
            
-  
   define_layer_temp(
     required_aes = required_aes,
     compute_panel = compute_panel,
@@ -288,23 +288,23 @@ create_layer_temp <- function(fun_name ="geom_circle",
 }
 ```
 
-
-
 #### and trying it out
 
 ```{r}
-create_layer_temp(fun_name = "stat_circle", 
-                        compute_panel = compute_panel_circle)
+create_layer_temp(fun_name = "stat_circle",
+                  required_aes = c("x0", "y0", "r"),
+                  compute_panel = compute_panel_circle,
+                  geom = "polygon")
 
 
 library(ggplot2)
 ggplot(cars) + 
-  aes(x0 = speed, y0 =  dist, r = 1) + 
-  stat_circle()
-
+  aes(x0 = speed, y0 =  dist, r = 3) + 
+  stat_circle(alpha = .4) + 
+  coord_equal()
 ```
 
-
+## Let's do star example!
 
 ```{r}
 compute_panel_star <- function(data, scales, n_points = 5, prop_inner_r){
@@ -313,35 +313,50 @@ compute_panel_star <- function(data, scales, n_points = 5, prop_inner_r){
   
   data %>%
   mutate(group = row_number()) %>%
-  tidyr::crossing(around = 2*pi*0:(n_vertices)/(n_vertices)) %>%
+  tidyr::crossing(around = 2*pi*0:(n_vertices)/(n_vertices)+pi/2) %>%
     dplyr::mutate(
-      y = y0 + (r - c(rep(c(0,.3), 5), 0)
+      y = y + (r - r*c(rep(c(0,.35), 5), 0)
                 ) * sin(around) ,
-      x = x0 + (r - c(rep(c(0,.3), 5), 0)
+      x = x + (r - r*c(rep(c(0,.35), 5), 0)
                 ) * cos(around)
       ) 
 
 }
 
-
-
-
-create_layer_temp(fun_name = "stat_star", 
+create_layer_temp(fun_name = "geom_star", 
                   compute_panel = compute_panel_star,
-                  required_aes = c("x0", "y0", "r"),
-                  geom = "path")
+                  required_aes = c("x", "y", "r"),
+                  geom = "polygon")
 
 
 library(ggplot2)
 ggplot(cars[1:8,] ) + 
-  aes(x0 = speed, y0 =  dist, r = 1) + 
-  stat_star() + 
+  aes(x = speed, y =  dist, r = 1) + 
+  geom_star() + 
   coord_equal()
+```
 
+### a real-world example... :-)
+
+```{r, fig.width=12, fig.height=7}
+twinkle_little_star_drm <- "ddsslls ffmmrrd"
+twinkle_lyrics <- "Twin-kle twin-kle lit-tle star
+How I won-der what you are"
+
+
+twinkle_little_star_drm |>
+ggdoremi:::join_phrases_drm_lyrics(twinkle_lyrics) |>
+ ggplot() + 
+   aes(y = drm, x = id_in_phrase, r = .58, label = lyric) + 
+   facet_wrap(~id_phrase) + 
+  geom_star(alpha = .4) +
+  geom_text(size = 5) +
+  coord_equal() + 
+  aes(fill = doremi, color = doremi)
 ```
 
 
-# another text
+# geom_xmean on the fly with compute group...
 
 ```{r}
 compute_group_xmean <- function(data, scales){
@@ -400,6 +415,7 @@ Use new {readme2pkg} function to do this from readme...
 
 ```{r}
 readme2pkg::chunk_to_r("define_layer_temp")
+readme2pkg::chunk_to_r("create_layer_temp")
 ```
 
 

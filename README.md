@@ -3,16 +3,22 @@
       - [Intro Thoughts](#intro-thoughts)
       - [Status Quo: 1. compute, 2. ggproto, 3. define
         layer](#status-quo-1-compute-2-ggproto-3-define-layer)
-      - [Experimental: `define_temp_geom()` combines 2 and 3 in using a
+      - [Experimental: `define_layer_temp()` combines 2 and 3 in using a
         temp
-        stat](#experimental-define_temp_geom-combines-2-and-3-in-using-a-temp-stat)
+        stat](#experimental-define_layer_temp-combines-2-and-3-in-using-a-temp-stat)
           - [Try it out](#try-it-out)
           - [Can you define a second w/ the same
             StatTemp…](#can-you-define-a-second-w-the-same-stattemp)
-          - [Another method, even more experimental … using
-            assign…](#another-method-even-more-experimental--using-assign)
-          - [wrapping this..](#wrapping-this)
-  - [another text](#another-text)
+      - [And `create_layer_temp` method, even more experimental (but
+        feeling nicer to
+        use)](#and-create_layer_temp-method-even-more-experimental-but-feeling-nicer-to-use)
+          - [First just checking out how assign
+            works.](#first-just-checking-out-how-assign-works)
+          - [wrapping this…](#wrapping-this)
+      - [Let’s do star example\!](#lets-do-star-example)
+          - [a real-world example… :-)](#a-real-world-example--)
+  - [geom\_xmean on the fly with compute
+    group…](#geom_xmean-on-the-fly-with-compute-group)
   - [Part II. Packaging and documentation 🚧
     ✅](#part-ii-packaging-and-documentation--)
       - [Phase 1. Minimal working
@@ -70,10 +76,12 @@ Proposing the {ggtemp} package\! 🦄
 The goal of {ggtemp} is to make writing some quick useful extension
 functions succinct. Right now, the amount of code required to write
 extensions is a bit of a mouthful, and could feel prohibitive for
-analysts. Specifically, defining new geom\_\* and stat\_\* layers
-outside of the context of a package, I believe, is not common, but could
-be useful. However the usual amount of code required to make such
-definitions, might feel like it ‘gunks up’ your script.
+day-to-day analysis. Specifically, defining new geom\_\* and stat\_\*
+layers outside of the context of a package, I believe, is not common,
+but could be quite useful, ultimately making plot builds intiuitive,
+fun, and readable. However the usual amount of code required to make
+define new geom\_\* or stat\_\* functions, might feel like it ‘gunks up’
+your script.
 
 With the {ggtemp} package, we’ll live in a different world (🦄 🦄 🦄) where
 the task is a snap 🫰, and the readability of the in-script definition of
@@ -98,6 +106,7 @@ Proposed API where we create a new geom\_\* layer function
                       compute_group = compute_group_xmean,
                       required_aes = "x",
                       geom = "segment")
+                      
                       
     # 3. Use temp layer!                   
     ggplot(data = cars) + 
@@ -178,7 +187,7 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
 
 ![](README_files/figure-gfm/cars-1.png)<!-- -->
 
-## Experimental: `define_temp_geom()` combines 2 and 3 in using a temp stat
+## Experimental: `define_layer_temp()` combines 2 and 3 in using a temp stat
 
 ``` r
 define_layer_temp <- function(
@@ -309,7 +318,9 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
 
 ![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-### Another method, even more experimental … using assign…
+## And `create_layer_temp` method, even more experimental (but feeling nicer to use)
+
+### First just checking out how assign works.
 
 ``` r
 assign(x = "geom_circle", 
@@ -327,7 +338,7 @@ assign(x = "geom_circle",
 )
 ```
 
-### wrapping this..
+### wrapping this…
 
 ``` r
 create_layer_temp <- function(fun_name ="geom_circle", 
@@ -339,7 +350,6 @@ create_layer_temp <- function(fun_name ="geom_circle",
   assign(x = fun_name, 
          value = function(...){
            
-  
   define_layer_temp(
     required_aes = required_aes,
     compute_panel = compute_panel,
@@ -355,17 +365,22 @@ create_layer_temp <- function(fun_name ="geom_circle",
 #### and trying it out
 
 ``` r
-create_layer_temp(fun_name = "stat_circle", 
-                        compute_panel = compute_panel_circle)
+create_layer_temp(fun_name = "stat_circle",
+                  required_aes = c("x0", "y0", "r"),
+                  compute_panel = compute_panel_circle,
+                  geom = "polygon")
 
 
 library(ggplot2)
 ggplot(cars) + 
-  aes(x0 = speed, y0 =  dist, r = 1) + 
-  stat_circle()
+  aes(x0 = speed, y0 =  dist, r = 3) + 
+  stat_circle(alpha = .4) + 
+  coord_equal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+## Let’s do star example\!
 
 ``` r
 compute_panel_star <- function(data, scales, n_points = 5, prop_inner_r){
@@ -374,35 +389,55 @@ compute_panel_star <- function(data, scales, n_points = 5, prop_inner_r){
   
   data %>%
   mutate(group = row_number()) %>%
-  tidyr::crossing(around = 2*pi*0:(n_vertices)/(n_vertices)) %>%
+  tidyr::crossing(around = 2*pi*0:(n_vertices)/(n_vertices)+pi/2) %>%
     dplyr::mutate(
-      y = y0 + (r - c(rep(c(0,.3), 5), 0)
+      y = y + (r - r*c(rep(c(0,.35), 5), 0)
                 ) * sin(around) ,
-      x = x0 + (r - c(rep(c(0,.3), 5), 0)
+      x = x + (r - r*c(rep(c(0,.35), 5), 0)
                 ) * cos(around)
       ) 
 
 }
 
-
-
-
-create_layer_temp(fun_name = "stat_star", 
+create_layer_temp(fun_name = "geom_star", 
                   compute_panel = compute_panel_star,
-                  required_aes = c("x0", "y0", "r"),
-                  geom = "path")
+                  required_aes = c("x", "y", "r"),
+                  geom = "polygon")
 
 
 library(ggplot2)
-ggplot(cars[1:5,] ) + 
-  aes(x0 = speed, y0 =  dist, r = 1) + 
-  stat_star() + 
+ggplot(cars[1:8,] ) + 
+  aes(x = speed, y =  dist, r = 1) + 
+  geom_star() + 
   coord_equal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+### a real-world example… :-)
+
+``` r
+twinkle_little_star_drm <- "ddsslls ffmmrrd"
+twinkle_lyrics <- "Twin-kle twin-kle lit-tle star
+How I won-der what you are"
+
+
+twinkle_little_star_drm |>
+ggdoremi:::join_phrases_drm_lyrics(twinkle_lyrics) |>
+ ggplot() + 
+   aes(y = drm, x = id_in_phrase, r = .58, label = lyric) + 
+   facet_wrap(~id_phrase) + 
+  geom_star(alpha = .4) +
+  geom_text(size = 5) +
+  coord_equal() + 
+  aes(fill = doremi, color = doremi)
+#> Joining with `by = join_by(drm)`
+#> Joining with `by = join_by(id_phrase, id_in_phrase)`
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
-# another text
+# geom\_xmean on the fly with compute group…
 
 ``` r
 compute_group_xmean <- function(data, scales){
@@ -466,6 +501,7 @@ Use new {readme2pkg} function to do this from readme…
 
 ``` r
 readme2pkg::chunk_to_r("define_layer_temp")
+readme2pkg::chunk_to_r("create_layer_temp")
 ```
 
 ### Bit E. Run `devtools::check()` and addressed errors. 🚧 ✅
