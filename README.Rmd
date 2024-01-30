@@ -353,6 +353,8 @@ ggdoremi:::join_phrases_drm_lyrics(twinkle_lyrics) |>
   geom_text(size = 5) +
   coord_equal() + 
   aes(fill = doremi, color = doremi)
+
+last_plot()$data |> head()
 ```
 
 

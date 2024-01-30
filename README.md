@@ -437,6 +437,21 @@ ggdoremi:::join_phrases_drm_lyrics(twinkle_lyrics) |>
 
 ![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
+``` r
+
+last_plot()$data |> head()
+#> # A tibble: 6 × 7
+#> # Groups:   id_phrase [1]
+#>   id_phrase id_in_phrase drm   doremi  freq lyric .group
+#>       <int>        <int> <fct> <fct>  <dbl> <chr>  <int>
+#> 1         1            1 d     do      440  Twin       1
+#> 2         1            2 d     do      440  kle        1
+#> 3         1            3 s     sol     660  twin       1
+#> 4         1            4 s     sol     660  kle        1
+#> 5         1            5 l     la      742. lit        1
+#> 6         1            6 l     la      742. tle        1
+```
+
 # geom\_xmean on the fly with compute group…
 
 ``` r
