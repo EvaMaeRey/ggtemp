@@ -2,7 +2,8 @@ define_layer_temp <- function(
   required_aes,
   compute_panel = NULL, 
   compute_group = NULL,
-  geom = ggplot2::GeomPoint, 
+  geom = NULL,
+  geom_default = ggplot2::GeomPoint, 
   mapping = NULL,
   data = NULL,
   position = "identity",
@@ -26,6 +27,8 @@ StatTemp <- ggproto(
   compute_group = compute_group,
   required_aes = required_aes)
   }  
+  
+  if(is.null(geom)){geom <- geom_default}
 
   ggplot2::layer(
     stat = StatTemp,  # proto object from Step 2

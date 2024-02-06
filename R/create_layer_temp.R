@@ -2,7 +2,7 @@ create_layer_temp <- function(fun_name ="geom_circle",
                                     compute_panel = NULL,
                                     compute_group = NULL,
                                     required_aes = c("x0", "y0", "r"),
-                                    geom = "point"){
+                                    geom_default ="point", ...){
 
   assign(x = fun_name, 
          value = function(...){
@@ -11,7 +11,7 @@ create_layer_temp <- function(fun_name ="geom_circle",
     required_aes = required_aes,
     compute_panel = compute_panel,
     compute_group = compute_group,
-    geom = geom,
+    geom_default = geom_default,
     ...)  },
   pos = 1
   )

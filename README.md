@@ -194,7 +194,8 @@ define_layer_temp <- function(
   required_aes,
   compute_panel = NULL, 
   compute_group = NULL,
-  geom = ggplot2::GeomPoint, 
+  geom = NULL,
+  geom_default = ggplot2::GeomPoint, 
   mapping = NULL,
   data = NULL,
   position = "identity",
@@ -218,6 +219,8 @@ StatTemp <- ggproto(
   compute_group = compute_group,
   required_aes = required_aes)
   }  
+  
+  if(is.null(geom)){geom <- geom_default}
 
   ggplot2::layer(
     stat = StatTemp,  # proto object from Step 2
@@ -253,13 +256,16 @@ geom_circle <- function(...){
   define_layer_temp(
     required_aes = c("x0", "y0", "r"),
     compute_panel = compute_panel_circle,
-    geom = ggplot2::GeomPath,
+    geom_default = ggplot2::GeomPath,
     ...)
   
 }
 ```
 
 #### use `geom_circle()`
+
+We see that the layers that are created can always have there geom
+switched (provided that required aes are computed in the background).
 
 ``` r
 library(ggplot2)
@@ -271,6 +277,14 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+``` r
+
+last_plot() + 
+  geom_circle(geom = "point")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
 
 ### Can you define a second w/ the same StatTemp…
 
@@ -298,7 +312,7 @@ geom_heart <- function(...){
     define_layer_temp(
       required_aes = c("x0", "y0", "r"),
       compute_panel = compute_panel_heart,
-      geom = ggplot2::GeomPolygon,
+      geom_default =ggplot2::GeomPolygon,
       ...)
 
   }
@@ -331,7 +345,7 @@ assign(x = "geom_circle",
   define_layer_temp(
     required_aes = c("x0", "y0", "r"),
     compute_panel = compute_panel_circle,
-    geom = ggplot2::GeomPath,
+    geom_default =ggplot2::GeomPath,
     ...)
   
 }
@@ -345,7 +359,7 @@ create_layer_temp <- function(fun_name ="geom_circle",
                                     compute_panel = NULL,
                                     compute_group = NULL,
                                     required_aes = c("x0", "y0", "r"),
-                                    geom = "point"){
+                                    geom_default ="point", ...){
 
   assign(x = fun_name, 
          value = function(...){
@@ -354,7 +368,7 @@ create_layer_temp <- function(fun_name ="geom_circle",
     required_aes = required_aes,
     compute_panel = compute_panel,
     compute_group = compute_group,
-    geom = geom,
+    geom_default = geom_default,
     ...)  },
   pos = 1
   )
@@ -368,7 +382,7 @@ create_layer_temp <- function(fun_name ="geom_circle",
 create_layer_temp(fun_name = "stat_circle",
                   required_aes = c("x0", "y0", "r"),
                   compute_panel = compute_panel_circle,
-                  geom = "polygon")
+                  geom_default ="polygon")
 
 
 library(ggplot2)
@@ -402,7 +416,7 @@ compute_panel_star <- function(data, scales, n_points = 5, prop_inner_r){
 create_layer_temp(fun_name = "geom_star", 
                   compute_panel = compute_panel_star,
                   required_aes = c("x", "y", "r"),
-                  geom = "polygon")
+                  geom_default ="polygon")
 
 
 library(ggplot2)
@@ -413,6 +427,14 @@ ggplot(cars[1:8,] ) +
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+
+last_plot() + 
+  geom_star(geom = "point", color = "magenta")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
 
 ### a real-world example… :-)
 
@@ -455,31 +477,28 @@ last_plot()$data |> head()
 # geom\_xmean on the fly with compute group…
 
 ``` r
+# 1. write some compute
 compute_group_xmean <- function(data, scales){
   
-  data |> # a dataframe with vars x, the required aesthetic
+  data |> 
     summarize(x = mean(x)) |>
     mutate(xend = x) |>
     mutate(y = -Inf, yend = Inf)
 
 }
 
+# 2. define function
 create_layer_temp(fun_name = "geom_xmean",
                   compute_group = compute_group_xmean,
                   required_aes = "x",
-                  geom = "segment")
+                  geom_default ="segment")
 
+# 3. use function
 ggplot(cars) + 
-  aes(x = speed, x0 = speed, y0 =  dist, r = 1) + 
-  stat_circle() + 
+  aes(x = speed, y = dist) + 
+  geom_point() + 
   geom_xmean() + 
   aes(color = speed > 18)
-#> Warning: The following aesthetics were dropped during statistical transformation: x0 and
-#> y0.
-#> ℹ This can happen when ggplot fails to infer the correct grouping structure in
-#>   the data.
-#> ℹ Did you forget to specify a `group` aesthetic or to convert a numerical
-#>   variable into a factor?
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
@@ -560,7 +579,7 @@ geom_circle_points <- function(...){
   ggtemp:::define_layer_temp(
     required_aes = c("x0", "y0", "r"),
     compute_panel = compute_panel_circle,
-    geom = ggplot2::GeomPoint,
+    geom_default =ggplot2::GeomPoint,
     ...)
   
 }
@@ -570,6 +589,8 @@ library(ggplot2)
 ggplot(cars) +
   aes(x0 = speed, y0 = dist, r = 1) + 
   geom_circle_points()
+#> Warning in ggtemp:::define_layer_temp(required_aes = c("x0", "y0", "r"), :
+#> Ignoring unknown parameters: `geom_default`
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
