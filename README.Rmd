@@ -396,6 +396,7 @@ ggplot(cars) +
   geom_xmean() + 
   aes(color = speed > 18)
 ```
+
 ## compute_oval_minmax
 
 ```{r}
@@ -432,7 +433,7 @@ ggplot(mtcars) +
   geom_oval_xy_range()
 
 last_plot() + 
-   aes(color = wt > 3.4, group = wt > 3.4)
+   aes(color = wt > 3.4)
 ```
 
 

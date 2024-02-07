@@ -19,6 +19,7 @@
           - [a real-world example… :-)](#a-real-world-example--)
   - [geom\_xmean on the fly with compute
     group…](#geom_xmean-on-the-fly-with-compute-group)
+      - [compute\_oval\_minmax](#compute_oval_minmax)
   - [Part II. Packaging and documentation 🚧
     ✅](#part-ii-packaging-and-documentation--)
       - [Phase 1. Minimal working
@@ -501,8 +502,9 @@ ggplot(cars) +
   aes(color = speed > 18)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- --> \#\#
-compute\_oval\_minmax
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+## compute\_oval\_minmax
 
 ``` r
 compute_oval_minmax <- function(data, scales, n = 100){
@@ -557,7 +559,7 @@ ggplot(mtcars) +
 ``` r
 
 last_plot() + 
-   aes(color = wt > 3.4, group = wt > 3.4)
+   aes(color = wt > 3.4)
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
