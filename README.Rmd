@@ -398,7 +398,42 @@ ggplot(cars) +
 ```
 
 
+```{r}
+compute_oval_minmax <- function(data, scales, n = 12){
+  
+  data |> 
+    summarize(
+        x0 = sum(range(x))/2,
+        y0 = sum(range(y))/2,
+        rx = (range(x)[2] - range(x)[1])/2 ,
+        ry = (range(y)[2] - range(y)[1])/2) |>
+    mutate(group = row_number()) |> 
+    crossing(tibble(z = 0:n)) |>
+    mutate(around = 2*pi*z/max(z)) |> 
+    mutate(x = x0 + cos(around)*rx,
+           y = y0 + sin(around)*ry) 
+  
+}
 
+mtcars |>
+  select(x = wt, y = mpg) |>
+  compute_oval_minmax()
+
+# 2. define function
+create_layer_temp(fun_name = "geom_oval_xy_range",
+                  compute_group = compute_oval_minmax,
+                  required_aes = c("x","y"),
+                  geom_default = "path")
+
+
+ggplot(mtcars) + 
+  aes(x = wt, y = mpg) +
+  geom_point() +
+  geom_oval_xy_range()
+
+last_plot() + 
+  aes(color = wt > 3.4, group = wt > 3.4)
+```
 
 
 # Part II. Packaging and documentation  🚧 ✅ 

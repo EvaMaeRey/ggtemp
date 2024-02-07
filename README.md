@@ -503,6 +503,66 @@ ggplot(cars) +
 
 ![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
+``` r
+compute_oval_minmax <- function(data, scales, n = 12){
+  
+  data |> 
+    summarize(
+        x0 = sum(range(x))/2,
+        y0 = sum(range(y))/2,
+        rx = (range(x)[2] - range(x)[1])/2 ,
+        ry = (range(y)[2] - range(y)[1])/2) |>
+    mutate(group = row_number()) |> 
+    crossing(tibble(z = 0:n)) |>
+    mutate(around = 2*pi*z/max(z)) |> 
+    mutate(x = x0 + cos(around)*rx,
+           y = y0 + sin(around)*ry) 
+  
+}
+
+mtcars |>
+  select(x = wt, y = mpg) |>
+  compute_oval_minmax()
+#> # A tibble: 13 × 9
+#>       x0    y0    rx    ry group     z around     x     y
+#>    <dbl> <dbl> <dbl> <dbl> <int> <int>  <dbl> <dbl> <dbl>
+#>  1  3.47  22.2  1.96  11.8     1     0  0      5.42  22.2
+#>  2  3.47  22.2  1.96  11.8     1     1  0.524  5.16  28.0
+#>  3  3.47  22.2  1.96  11.8     1     2  1.05   4.45  32.3
+#>  4  3.47  22.2  1.96  11.8     1     3  1.57   3.47  33.9
+#>  5  3.47  22.2  1.96  11.8     1     4  2.09   2.49  32.3
+#>  6  3.47  22.2  1.96  11.8     1     5  2.62   1.77  28.0
+#>  7  3.47  22.2  1.96  11.8     1     6  3.14   1.51  22.2
+#>  8  3.47  22.2  1.96  11.8     1     7  3.67   1.77  16.3
+#>  9  3.47  22.2  1.96  11.8     1     8  4.19   2.49  12.0
+#> 10  3.47  22.2  1.96  11.8     1     9  4.71   3.47  10.4
+#> 11  3.47  22.2  1.96  11.8     1    10  5.24   4.45  12.0
+#> 12  3.47  22.2  1.96  11.8     1    11  5.76   5.16  16.3
+#> 13  3.47  22.2  1.96  11.8     1    12  6.28   5.42  22.1
+
+# 2. define function
+create_layer_temp(fun_name = "geom_oval_xy_range",
+                  compute_group = compute_oval_minmax,
+                  required_aes = c("x","y"),
+                  geom_default = "path")
+
+
+ggplot(mtcars) + 
+  aes(x = wt, y = mpg) +
+  geom_point() +
+  geom_oval_xy_range()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+``` r
+
+last_plot() + 
+  aes(color = wt > 3.4, group = wt > 3.4)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
+
 # Part II. Packaging and documentation 🚧 ✅
 
 ## Phase 1. Minimal working package
@@ -593,7 +653,7 @@ ggplot(cars) +
 #> Ignoring unknown parameters: `geom_default`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ### Bit H. Chosen a license? 🚧 ✅
 
