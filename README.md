@@ -501,7 +501,8 @@ ggplot(cars) +
   aes(color = speed > 18)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- --> \#\#
+compute\_oval\_minmax
 
 ``` r
 compute_oval_minmax <- function(data, scales, n = 100){

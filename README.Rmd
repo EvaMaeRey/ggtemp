@@ -396,7 +396,7 @@ ggplot(cars) +
   geom_xmean() + 
   aes(color = speed > 18)
 ```
-
+## compute_oval_minmax
 
 ```{r}
 compute_oval_minmax <- function(data, scales, n = 100){
