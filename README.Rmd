@@ -399,7 +399,7 @@ ggplot(cars) +
 
 
 ```{r}
-compute_oval_minmax <- function(data, scales, n = 12){
+compute_oval_minmax <- function(data, scales, n = 100){
   
   data |> 
     summarize(
@@ -407,7 +407,7 @@ compute_oval_minmax <- function(data, scales, n = 12){
         y0 = sum(range(y))/2,
         rx = (range(x)[2] - range(x)[1])/2 ,
         ry = (range(y)[2] - range(y)[1])/2) |>
-    mutate(group = row_number()) |> 
+    # mutate(group = row_number()) |> 
     crossing(tibble(z = 0:n)) |>
     mutate(around = 2*pi*z/max(z)) |> 
     mutate(x = x0 + cos(around)*rx,
@@ -432,7 +432,7 @@ ggplot(mtcars) +
   geom_oval_xy_range()
 
 last_plot() + 
-  aes(color = wt > 3.4, group = wt > 3.4)
+   aes(color = wt > 3.4, group = wt > 3.4)
 ```
 
 

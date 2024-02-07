@@ -504,7 +504,7 @@ ggplot(cars) +
 ![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
-compute_oval_minmax <- function(data, scales, n = 12){
+compute_oval_minmax <- function(data, scales, n = 100){
   
   data |> 
     summarize(
@@ -512,7 +512,7 @@ compute_oval_minmax <- function(data, scales, n = 12){
         y0 = sum(range(y))/2,
         rx = (range(x)[2] - range(x)[1])/2 ,
         ry = (range(y)[2] - range(y)[1])/2) |>
-    mutate(group = row_number()) |> 
+    # mutate(group = row_number()) |> 
     crossing(tibble(z = 0:n)) |>
     mutate(around = 2*pi*z/max(z)) |> 
     mutate(x = x0 + cos(around)*rx,
@@ -523,22 +523,20 @@ compute_oval_minmax <- function(data, scales, n = 12){
 mtcars |>
   select(x = wt, y = mpg) |>
   compute_oval_minmax()
-#> # A tibble: 13 × 9
-#>       x0    y0    rx    ry group     z around     x     y
-#>    <dbl> <dbl> <dbl> <dbl> <int> <int>  <dbl> <dbl> <dbl>
-#>  1  3.47  22.2  1.96  11.8     1     0  0      5.42  22.2
-#>  2  3.47  22.2  1.96  11.8     1     1  0.524  5.16  28.0
-#>  3  3.47  22.2  1.96  11.8     1     2  1.05   4.45  32.3
-#>  4  3.47  22.2  1.96  11.8     1     3  1.57   3.47  33.9
-#>  5  3.47  22.2  1.96  11.8     1     4  2.09   2.49  32.3
-#>  6  3.47  22.2  1.96  11.8     1     5  2.62   1.77  28.0
-#>  7  3.47  22.2  1.96  11.8     1     6  3.14   1.51  22.2
-#>  8  3.47  22.2  1.96  11.8     1     7  3.67   1.77  16.3
-#>  9  3.47  22.2  1.96  11.8     1     8  4.19   2.49  12.0
-#> 10  3.47  22.2  1.96  11.8     1     9  4.71   3.47  10.4
-#> 11  3.47  22.2  1.96  11.8     1    10  5.24   4.45  12.0
-#> 12  3.47  22.2  1.96  11.8     1    11  5.76   5.16  16.3
-#> 13  3.47  22.2  1.96  11.8     1    12  6.28   5.42  22.1
+#> # A tibble: 101 × 8
+#>       x0    y0    rx    ry     z around     x     y
+#>    <dbl> <dbl> <dbl> <dbl> <int>  <dbl> <dbl> <dbl>
+#>  1  3.47  22.2  1.96  11.8     0 0       5.42  22.2
+#>  2  3.47  22.2  1.96  11.8     1 0.0628  5.42  22.9
+#>  3  3.47  22.2  1.96  11.8     2 0.126   5.41  23.6
+#>  4  3.47  22.2  1.96  11.8     3 0.188   5.39  24.4
+#>  5  3.47  22.2  1.96  11.8     4 0.251   5.36  25.1
+#>  6  3.47  22.2  1.96  11.8     5 0.314   5.33  25.8
+#>  7  3.47  22.2  1.96  11.8     6 0.377   5.29  26.5
+#>  8  3.47  22.2  1.96  11.8     7 0.440   5.24  27.2
+#>  9  3.47  22.2  1.96  11.8     8 0.503   5.18  27.8
+#> 10  3.47  22.2  1.96  11.8     9 0.565   5.12  28.4
+#> # ℹ 91 more rows
 
 # 2. define function
 create_layer_temp(fun_name = "geom_oval_xy_range",
@@ -558,7 +556,7 @@ ggplot(mtcars) +
 ``` r
 
 last_plot() + 
-  aes(color = wt > 3.4, group = wt > 3.4)
+   aes(color = wt > 3.4, group = wt > 3.4)
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
