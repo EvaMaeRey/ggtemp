@@ -1,7 +1,7 @@
 ---
 output: 
   github_document:
-    toc: TRUE
+    toc: FALSE
 
 ---
 
@@ -455,12 +455,28 @@ return_st_bbox_df <- function(sf_df){
 
 }
 
-northcarolina_county_reference<- northcarolina_county_reference0 |>
+add_xy_coords <- function(geo_df){
+
+geo_df |>
+    dplyr::pull(geometry) |>
+    sf::st_zm() |>
+    sf::st_point_on_surface() ->
+  points_sf
+
+the_coords <- do.call(rbind, sf::st_geometry(points_sf)) %>%
+  tibble::as_tibble() %>% setNames(c("x","y"))
+
+cbind(geo_df, the_coords)
+
+}
+
+northcarolina_county_reference <- northcarolina_county_reference0 |>
   dplyr::mutate(bb =
                   purrr::map(geometry,
                              return_st_bbox_df)) |>
   tidyr::unnest(bb) |>
-  data.frame()
+  data.frame() |>
+  add_xy_coords() 
 
 compute_panel_county <- function(data, scales){
   
@@ -475,9 +491,10 @@ StatNcfips <- ggplot2::ggproto(`_class` = "StatNcfips",
                                 compute_panel = compute_panel_county)
 
 
-geom_county <- function(
+stat_county <- function(
       mapping = NULL,
       data = NULL,
+      geom = ggplot2::GeomSf,
       position = "identity",
       na.rm = FALSE,
       show.legend = NA,
@@ -487,7 +504,7 @@ geom_county <- function(
 
   c(ggplot2::layer_sf(
               stat = StatNcfips,  # proto object from step 2
-              geom = ggplot2::GeomSf,  # inherit other behavior
+              geom = geom,  # inherit other behavior
               data = data,
               mapping = mapping,
               position = position,
@@ -509,8 +526,11 @@ geom_county <- function(
 ggnorthcarolina::northcarolina_county_flat |> 
   ggplot() + 
   aes(fips = fips) + 
-  geom_county(crs = "NAD83")  + 
-  aes(fill = SID74/BIR74)
+  stat_county(crs = "NAD83")  + 
+  aes(fill = SID74/BIR74) + 
+  stat_county(geom = 'text', 
+              aes(label = SID74),
+              color = "oldlace")
 
 
 ```
@@ -523,15 +543,6 @@ northcarolina_county_reference0 <-
   dplyr::rename(county_name = NAME,
                 fips = FIPS) |>
   dplyr::select(county_name, fips, geometry)
-
-return_st_bbox_df <- function(sf_df){
-  
-  bb <- sf::st_bbox(sf_df)
-
-  data.frame(xmin = bb[1], ymin = bb[2],
-             xmax = bb[3], ymax = bb[4])
-
-}
 
 
 define_layer_sf_temp <- function(ref_df,
@@ -549,30 +560,33 @@ define_layer_sf_temp <- function(ref_df,
                                  ...){
 
 
-ref_df_w_bb <- 
+ref_df_w_bb_and_xy_centers <- 
   ref_df |>
   dplyr::mutate(bb =
                   purrr::map(geometry,
                              return_st_bbox_df)) |>
   tidyr::unnest(bb) |>
-  data.frame()
+  data.frame() |>
+  add_xy_coords()
 
 compute_panel_county <- function(data, scales){
   
   data |> 
-    dplyr::inner_join(ref_df_w_bb)
+    dplyr::inner_join(ref_df_w_bb_and_xy_centers)
   
 }
 
 StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
                                 `_inherit` = ggplot2::Stat,
                                 required_aes = required_aes,
-                                compute_panel = NULL)
+                                compute_panel = compute_panel_county)
 
 
-c(ggplot2::layer_sf(
-              stat = StatNcfips,  # proto object from step 2
-              geom = ggplot2::GeomSf,  # inherit other behavior
+  if(is.null(geom)){geom <- geom_default}
+
+ c(ggplot2::layer_sf(
+              stat = StatTempsf,  # proto object from step 2
+              geom = geom,  # inherit other behavior
               data = data,
               mapping = mapping,
               position = position,
@@ -586,13 +600,14 @@ c(ggplot2::layer_sf(
                        datum = crs,
                        default = TRUE)
      )
-  }
+}
 
 
 
-geom_county <- function(...){
+
+geom_county2 <- function(...){
   
-  sf::st_read(system.file("shape/nc.shp", package="sf")) |>
+ sf::st_read(system.file("shape/nc.shp", package="sf")) |>
   dplyr::rename(county_name = NAME,
                 fips = FIPS) |>
   dplyr::select(county_name, fips, geometry) |>
@@ -601,15 +616,13 @@ geom_county <- function(...){
   
 }
 
-
-
-
 ggnorthcarolina::northcarolina_county_flat |> 
   ggplot() + 
   aes(fips = fips) + 
-  geom_county()  + 
-  aes(fill = SID74/BIR74)
-
+  geom_county2()  + 
+  aes(fill = SID74/BIR74)  +
+  geom_county2(geom = "text", 
+              mapping = aes(label = BIR74))  #oh no!
 
 ```
 
@@ -617,42 +630,87 @@ ggnorthcarolina::northcarolina_county_flat |>
 
 ```{r}
 create_layer_sf_temp <- function(ref_df, 
-                                 fun_name ="geom_geo", 
-                                 required_aes,
-                                 geom = "sf"){
+                                 fun_name ="geom_my_sf", 
+                                 required_aes, 
+                                 geom_default = ggplot2::GeomSf,
+                                 ...){
 
   assign(x = fun_name, 
          value = function(...){
            
-  
+           
   define_layer_sf_temp(ref_df = ref_df,
     required_aes = required_aes,
-    compute_panel = compute_panel,
-    geom = geom,
+    geom_default = geom_default,
     ...)  },
   pos = 1
   )
   
 }
+```
 
-
-
+```{r}
 sf::st_read(system.file("shape/nc.shp", package="sf")) |>
   dplyr::rename(county_name = NAME,
                 fips = FIPS) |>
-  dplyr::select(county_name, fips, geometry) |>
-  create_layer_sf_temp(fun_name = "geom_county",
-                       required_aes = "county_name|fips")
+  dplyr::select(county_name, fips, geometry) ->
+my_ref_data
+
+
+create_layer_sf_temp(ref_df = my_ref_data,
+  fun_name = "geom_county",
+  required_aes = "county_name|fips")
 
 
 ggnorthcarolina::northcarolina_county_flat |> 
   ggplot() + 
   aes(fips = fips) + 
   geom_county()  + 
-  aes(fill = SID74/BIR74)
-
+  aes(fill = SID74/BIR74) + 
+  geom_county(geom = "text", 
+              mapping = aes(label = BIR74)) # oh ho!!
 ```
 
+
+
+```{r}
+rnaturalearth::ne_countries(  
+  scale = "medium", returnclass = "sf") %>%  
+  select(name, continent, geometry, iso_a3) %>% 
+  rename(country_name = name,
+         iso3c = iso_a3
+         )  ->
+ref_data
+
+create_layer_sf_temp(ref_df = ref_data, 
+                     fun_name = "geom_country",
+                    required_aes = "country_name|iso3c")
+
+
+gapminder::gapminder |>
+  filter(year == 2002) |>
+  ggplot() + 
+  aes(country_name = country) + 
+  geom_country() + 
+  geom_country(geom = "text", 
+               mapping = aes(label = country),
+               check_overlap =T)
+
+library(tidyverse)
+heritage_wide <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-02-06/heritage.csv') 
+
+heritage <- heritage_wide |>
+  pivot_longer(-1, names_to = "year", values_to = "count") |>
+  mutate(year = as.numeric(year)) |>
+  mutate(country = as.factor(country))
+
+heritage |>
+  ggplot() + 
+  aes(country_name = country) +
+  geom_country() +
+  aes(fill = count) + 
+  facet_grid(~year)
+```
 
 # Part II. Packaging and documentation  🚧 ✅ 
 

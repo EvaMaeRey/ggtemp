@@ -1,79 +1,4 @@
 
-  - [Part I. Work out functionality ✅](#part-i-work-out-functionality-)
-      - [Intro Thoughts](#intro-thoughts)
-      - [Status Quo: 1. compute, 2. ggproto, 3. define
-        layer](#status-quo-1-compute-2-ggproto-3-define-layer)
-      - [Experimental: `define_layer_temp()` combines 2 and 3 in using a
-        temp
-        stat](#experimental-define_layer_temp-combines-2-and-3-in-using-a-temp-stat)
-          - [Try it out](#try-it-out)
-          - [Can you define a second w/ the same
-            StatTemp…](#can-you-define-a-second-w-the-same-stattemp)
-      - [And `create_layer_temp` method, even more experimental (but
-        feeling nicer to
-        use)](#and-create_layer_temp-method-even-more-experimental-but-feeling-nicer-to-use)
-          - [First just checking out how assign
-            works.](#first-just-checking-out-how-assign-works)
-          - [wrapping this…](#wrapping-this)
-      - [Let’s do star example\!](#lets-do-star-example)
-          - [a real-world example… :-)](#a-real-world-example--)
-  - [geom\_xmean on the fly with compute
-    group…](#geom_xmean-on-the-fly-with-compute-group)
-      - [compute\_oval\_minmax](#compute_oval_minmax)
-  - [spatial ‘status quo’ of ggplot2 extension
-    cookbook](#spatial-status-quo-of-ggplot2-extension-cookbook)
-  - [define\_layer\_sf\_temp build](#define_layer_sf_temp-build)
-  - [Part II. Packaging and documentation 🚧
-    ✅](#part-ii-packaging-and-documentation--)
-      - [Phase 1. Minimal working
-        package](#phase-1-minimal-working-package)
-          - [Bit A. Created files for package archetecture, running
-            `devtools::create(".")` in interactive session. 🚧
-            ✅](#bit-a-created-files-for-package-archetecture-running-devtoolscreate-in-interactive-session--)
-          - [Bit B. Added roxygen skeleton? 🚧
-            ✅](#bit-b-added-roxygen-skeleton--)
-          - [Bit C. Managed dependencies ? 🚧
-            ✅](#bit-c-managed-dependencies---)
-          - [Bit D. Moved functions R folder? 🚧
-            ✅](#bit-d-moved-functions-r-folder--)
-          - [Bit E. Run `devtools::check()` and addressed errors. 🚧
-            ✅](#bit-e-run-devtoolscheck-and-addressed-errors--)
-          - [Bit F. Build package 🚧 ✅](#bit-f-build-package--)
-          - [Bit G. Write and test traditional README that uses built
-            package. 🚧
-            ✅](#bit-g-write-and-test-traditional-readme-that-uses-built-package--)
-          - [Bit H. Chosen a license? 🚧 ✅](#bit-h-chosen-a-license--)
-          - [Bit I. Add lifecycle badge
-            (experimental)](#bit-i-add-lifecycle-badge-experimental)
-      - [Phase 2: Listen & iterate 🚧 ✅](#phase-2-listen--iterate--)
-      - [Phase 3: Let things settle](#phase-3-let-things-settle)
-          - [Bit A. Settle on examples. Put them in the roxygen skeleton
-            and readme. 🚧
-            ✅](#bit-a-settle-on-examples-put-them-in-the-roxygen-skeleton-and-readme--)
-          - [Bit B. Written formal tests of functions and save to test
-            that folders 🚧
-            ✅](#bit-b-written-formal-tests-of-functions-and-save-to-test-that-folders--)
-          - [Bit C. Added a description and author information in the
-            DESCRIPTION file 🚧
-            ✅](#bit-c-added-a-description-and-author-information-in-the-description-file--)
-          - [Bit D. Addressed *all* notes, warnings and errors. 🚧
-            ✅](#bit-d-addressed-all-notes-warnings-and-errors--)
-      - [Phase 4. Promote to wider
-        audience…](#phase-4-promote-to-wider-audience)
-          - [Bit A. Package website built? 🚧
-            ✅](#bit-a-package-website-built--)
-          - [Bit B. Package website deployed? 🚧
-            ✅](#bit-b-package-website-deployed--)
-      - [Phase 5: Harden/commit](#phase-5-hardencommit)
-          - [Submit to CRAN? 🚧 ✅](#submit-to-cran--)
-  - [Appendix: Reports, Environment](#appendix-reports-environment)
-      - [Description file extract](#description-file-extract)
-      - [Environment](#environment)
-      - [`devtools::check()` report](#devtoolscheck-report)
-      - [Non-developer introduction to package (and test of installed
-        package)](#non-developer-introduction-to-package-and-test-of-installed-package)
-      - [Example using package](#example-using-package)
-
 Proposing the {ggtemp} package\! 🦄
 <!-- (typical package introduction write up; but actually aspirational) -->
 
@@ -593,12 +518,36 @@ return_st_bbox_df <- function(sf_df){
 
 }
 
-northcarolina_county_reference<- northcarolina_county_reference0 |>
+add_xy_coords <- function(geo_df){
+
+geo_df |>
+    dplyr::pull(geometry) |>
+    sf::st_zm() |>
+    sf::st_point_on_surface() ->
+  points_sf
+
+the_coords <- do.call(rbind, sf::st_geometry(points_sf)) %>%
+  tibble::as_tibble() %>% setNames(c("x","y"))
+
+cbind(geo_df, the_coords)
+
+}
+
+northcarolina_county_reference <- northcarolina_county_reference0 |>
   dplyr::mutate(bb =
                   purrr::map(geometry,
                              return_st_bbox_df)) |>
   tidyr::unnest(bb) |>
-  data.frame()
+  data.frame() |>
+  add_xy_coords() 
+#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
+#> st_point_on_surface may not give correct results for longitude/latitude data
+#> Warning: The `x` argument of `as_tibble.matrix()` must have unique column names if
+#> `.name_repair` is omitted as of tibble 2.0.0.
+#> ℹ Using compatibility `.name_repair`.
+#> This warning is displayed once every 8 hours.
+#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+#> generated.
 
 compute_panel_county <- function(data, scales){
   
@@ -613,9 +562,10 @@ StatNcfips <- ggplot2::ggproto(`_class` = "StatNcfips",
                                 compute_panel = compute_panel_county)
 
 
-geom_county <- function(
+stat_county <- function(
       mapping = NULL,
       data = NULL,
+      geom = ggplot2::GeomSf,
       position = "identity",
       na.rm = FALSE,
       show.legend = NA,
@@ -625,7 +575,7 @@ geom_county <- function(
 
   c(ggplot2::layer_sf(
               stat = StatNcfips,  # proto object from step 2
-              geom = ggplot2::GeomSf,  # inherit other behavior
+              geom = geom,  # inherit other behavior
               data = data,
               mapping = mapping,
               position = position,
@@ -647,8 +597,12 @@ geom_county <- function(
 ggnorthcarolina::northcarolina_county_flat |> 
   ggplot() + 
   aes(fips = fips) + 
-  geom_county(crs = "NAD83")  + 
-  aes(fill = SID74/BIR74)
+  stat_county(crs = "NAD83")  + 
+  aes(fill = SID74/BIR74) + 
+  stat_county(geom = 'text', 
+              aes(label = SID74),
+              color = "oldlace")
+#> Joining with `by = join_by(fips)`
 #> Joining with `by = join_by(fips)`
 ```
 
@@ -671,15 +625,6 @@ northcarolina_county_reference0 <-
 #> Bounding box:  xmin: -84.32385 ymin: 33.88199 xmax: -75.45698 ymax: 36.58965
 #> Geodetic CRS:  NAD27
 
-return_st_bbox_df <- function(sf_df){
-  
-  bb <- sf::st_bbox(sf_df)
-
-  data.frame(xmin = bb[1], ymin = bb[2],
-             xmax = bb[3], ymax = bb[4])
-
-}
-
 
 define_layer_sf_temp <- function(ref_df,
                                  geom = NULL, 
@@ -696,30 +641,33 @@ define_layer_sf_temp <- function(ref_df,
                                  ...){
 
 
-ref_df_w_bb <- 
+ref_df_w_bb_and_xy_centers <- 
   ref_df |>
   dplyr::mutate(bb =
                   purrr::map(geometry,
                              return_st_bbox_df)) |>
   tidyr::unnest(bb) |>
-  data.frame()
+  data.frame() |>
+  add_xy_coords()
 
 compute_panel_county <- function(data, scales){
   
   data |> 
-    dplyr::inner_join(ref_df_w_bb)
+    dplyr::inner_join(ref_df_w_bb_and_xy_centers)
   
 }
 
 StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
                                 `_inherit` = ggplot2::Stat,
                                 required_aes = required_aes,
-                                compute_panel = NULL)
+                                compute_panel = compute_panel_county)
 
 
-c(ggplot2::layer_sf(
-              stat = StatNcfips,  # proto object from step 2
-              geom = ggplot2::GeomSf,  # inherit other behavior
+  if(is.null(geom)){geom <- geom_default}
+
+ c(ggplot2::layer_sf(
+              stat = StatTempsf,  # proto object from step 2
+              geom = geom,  # inherit other behavior
               data = data,
               mapping = mapping,
               position = position,
@@ -733,13 +681,14 @@ c(ggplot2::layer_sf(
                        datum = crs,
                        default = TRUE)
      )
-  }
+}
 
 
 
-geom_county <- function(...){
+
+geom_county2 <- function(...){
   
-  sf::st_read(system.file("shape/nc.shp", package="sf")) |>
+ sf::st_read(system.file("shape/nc.shp", package="sf")) |>
   dplyr::rename(county_name = NAME,
                 fips = FIPS) |>
   dplyr::select(county_name, fips, geometry) |>
@@ -748,14 +697,13 @@ geom_county <- function(...){
   
 }
 
-
-
-
 ggnorthcarolina::northcarolina_county_flat |> 
   ggplot() + 
   aes(fips = fips) + 
-  geom_county()  + 
-  aes(fill = SID74/BIR74)
+  geom_county2()  + 
+  aes(fill = SID74/BIR74)  +
+  geom_county2(geom = "text", 
+              mapping = aes(label = BIR74))  #oh no!
 #> Reading layer `nc' from data source 
 #>   `/Library/Frameworks/R.framework/Versions/4.2/Resources/library/sf/shape/nc.shp' 
 #>   using driver `ESRI Shapefile'
@@ -764,6 +712,19 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Dimension:     XY
 #> Bounding box:  xmin: -84.32385 ymin: 33.88199 xmax: -75.45698 ymax: 36.58965
 #> Geodetic CRS:  NAD27
+#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
+#> st_point_on_surface may not give correct results for longitude/latitude data
+#> Reading layer `nc' from data source 
+#>   `/Library/Frameworks/R.framework/Versions/4.2/Resources/library/sf/shape/nc.shp' 
+#>   using driver `ESRI Shapefile'
+#> Simple feature collection with 100 features and 14 fields
+#> Geometry type: MULTIPOLYGON
+#> Dimension:     XY
+#> Bounding box:  xmin: -84.32385 ymin: 33.88199 xmax: -75.45698 ymax: 36.58965
+#> Geodetic CRS:  NAD27
+#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
+#> st_point_on_surface may not give correct results for longitude/latitude data
+#> Joining with `by = join_by(fips)`
 #> Joining with `by = join_by(fips)`
 ```
 
@@ -771,39 +732,31 @@ ggnorthcarolina::northcarolina_county_flat |>
 
 ``` r
 create_layer_sf_temp <- function(ref_df, 
-                                 fun_name ="geom_geo", 
-                                 required_aes,
-                                 geom = "sf"){
+                                 fun_name ="geom_my_sf", 
+                                 required_aes, 
+                                 geom_default = ggplot2::GeomSf,
+                                 ...){
 
   assign(x = fun_name, 
          value = function(...){
            
-  
+           
   define_layer_sf_temp(ref_df = ref_df,
     required_aes = required_aes,
-    compute_panel = compute_panel,
-    geom = geom,
+    geom_default = geom_default,
     ...)  },
   pos = 1
   )
   
 }
+```
 
-
-
+``` r
 sf::st_read(system.file("shape/nc.shp", package="sf")) |>
   dplyr::rename(county_name = NAME,
                 fips = FIPS) |>
-  dplyr::select(county_name, fips, geometry) |>
-  create_layer_sf_temp(fun_name = "geom_county",
-                       required_aes = "county_name|fips")
-
-
-ggnorthcarolina::northcarolina_county_flat |> 
-  ggplot() + 
-  aes(fips = fips) + 
-  geom_county()  + 
-  aes(fill = SID74/BIR74)
+  dplyr::select(county_name, fips, geometry) ->
+my_ref_data
 #> Reading layer `nc' from data source 
 #>   `/Library/Frameworks/R.framework/Versions/4.2/Resources/library/sf/shape/nc.shp' 
 #>   using driver `ESRI Shapefile'
@@ -812,10 +765,95 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Dimension:     XY
 #> Bounding box:  xmin: -84.32385 ymin: 33.88199 xmax: -75.45698 ymax: 36.58965
 #> Geodetic CRS:  NAD27
+
+
+create_layer_sf_temp(ref_df = my_ref_data,
+  fun_name = "geom_county",
+  required_aes = "county_name|fips")
+
+
+ggnorthcarolina::northcarolina_county_flat |> 
+  ggplot() + 
+  aes(fips = fips) + 
+  geom_county()  + 
+  aes(fill = SID74/BIR74) + 
+  geom_county(geom = "text", 
+              mapping = aes(label = BIR74)) # oh ho!!
+#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
+#> st_point_on_surface may not give correct results for longitude/latitude data
+
+#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
+#> st_point_on_surface may not give correct results for longitude/latitude data
+#> Joining with `by = join_by(fips)`
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+``` r
+rnaturalearth::ne_countries(  
+  scale = "medium", returnclass = "sf") %>%  
+  select(name, continent, geometry, iso_a3) %>% 
+  rename(country_name = name,
+         iso3c = iso_a3
+         )  ->
+ref_data
+
+create_layer_sf_temp(ref_df = ref_data, 
+                     fun_name = "geom_country",
+                    required_aes = "country_name|iso3c")
+
+
+gapminder::gapminder |>
+  filter(year == 2002) |>
+  ggplot() + 
+  aes(country_name = country) + 
+  geom_country() + 
+  geom_country(geom = "text", 
+               mapping = aes(label = country),
+               check_overlap =T)
+#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
+#> st_point_on_surface may not give correct results for longitude/latitude data
+
+#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
+#> st_point_on_surface may not give correct results for longitude/latitude data
+#> Joining with `by = join_by(country_name)`
+#> Joining with `by = join_by(country_name)`
+```
+
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+``` r
+
+library(tidyverse)
+heritage_wide <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-02-06/heritage.csv') 
+#> Rows: 3 Columns: 3
+#> ── Column specification ────────────────────────────────────────────────────────
+#> Delimiter: ","
+#> chr (1): country
+#> dbl (2): 2004, 2022
+#> 
+#> ℹ Use `spec()` to retrieve the full column specification for this data.
+#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+heritage <- heritage_wide |>
+  pivot_longer(-1, names_to = "year", values_to = "count") |>
+  mutate(year = as.numeric(year)) |>
+  mutate(country = as.factor(country))
+
+heritage |>
+  ggplot() + 
+  aes(country_name = country) +
+  geom_country() +
+  aes(fill = count) + 
+  facet_grid(~year)
+#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
+#> st_point_on_surface may not give correct results for longitude/latitude data
+#> Joining with `by = join_by(country_name)`
+#> Joining with `by = join_by(country_name)`
+```
+
+![](README_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
 
 # Part II. Packaging and documentation 🚧 ✅
 
@@ -907,7 +945,7 @@ ggplot(cars) +
 #> Ignoring unknown parameters: `geom_default`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ### Bit H. Chosen a license? 🚧 ✅
 
