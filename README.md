@@ -20,6 +20,9 @@
   - [geom\_xmean on the fly with compute
     group…](#geom_xmean-on-the-fly-with-compute-group)
       - [compute\_oval\_minmax](#compute_oval_minmax)
+  - [spatial ‘status quo’ of ggplot2 extension
+    cookbook](#spatial-status-quo-of-ggplot2-extension-cookbook)
+  - [define\_layer\_sf\_temp build](#define_layer_sf_temp-build)
   - [Part II. Packaging and documentation 🚧
     ✅](#part-ii-packaging-and-documentation--)
       - [Phase 1. Minimal working
@@ -564,6 +567,256 @@ last_plot() +
 
 ![](README_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
 
+# spatial ‘status quo’ of ggplot2 extension cookbook
+
+``` r
+northcarolina_county_reference0 <-
+  sf::st_read(system.file("shape/nc.shp", package="sf")) |>
+  dplyr::rename(county_name = NAME,
+                fips = FIPS) |>
+  dplyr::select(county_name, fips, geometry)
+#> Reading layer `nc' from data source 
+#>   `/Library/Frameworks/R.framework/Versions/4.2/Resources/library/sf/shape/nc.shp' 
+#>   using driver `ESRI Shapefile'
+#> Simple feature collection with 100 features and 14 fields
+#> Geometry type: MULTIPOLYGON
+#> Dimension:     XY
+#> Bounding box:  xmin: -84.32385 ymin: 33.88199 xmax: -75.45698 ymax: 36.58965
+#> Geodetic CRS:  NAD27
+
+return_st_bbox_df <- function(sf_df){
+  
+  bb <- sf::st_bbox(sf_df)
+
+  data.frame(xmin = bb[1], ymin = bb[2],
+             xmax = bb[3], ymax = bb[4])
+
+}
+
+northcarolina_county_reference<- northcarolina_county_reference0 |>
+  dplyr::mutate(bb =
+                  purrr::map(geometry,
+                             return_st_bbox_df)) |>
+  tidyr::unnest(bb) |>
+  data.frame()
+
+compute_panel_county <- function(data, scales){
+  
+  data |> 
+    dplyr::inner_join(northcarolina_county_reference)
+  
+}
+
+StatNcfips <- ggplot2::ggproto(`_class` = "StatNcfips",
+                                `_inherit` = ggplot2::Stat,
+                                required_aes = "fips|county_name",
+                                compute_panel = compute_panel_county)
+
+
+geom_county <- function(
+      mapping = NULL,
+      data = NULL,
+      position = "identity",
+      na.rm = FALSE,
+      show.legend = NA,
+      inherit.aes = TRUE,
+      crs = "NAD27", # "NAD27", 5070, "WGS84", "NAD83", 4326 , 3857
+      ...) {
+
+  c(ggplot2::layer_sf(
+              stat = StatNcfips,  # proto object from step 2
+              geom = ggplot2::GeomSf,  # inherit other behavior
+              data = data,
+              mapping = mapping,
+              position = position,
+              show.legend = show.legend,
+              inherit.aes = inherit.aes,
+              params = rlang::list2(na.rm = na.rm, ...)
+              ),
+              
+              coord_sf(crs = crs,
+                       default_crs = sf::st_crs(crs),
+                       datum = crs,
+                       default = TRUE)
+     )
+  }
+
+
+
+
+ggnorthcarolina::northcarolina_county_flat |> 
+  ggplot() + 
+  aes(fips = fips) + 
+  geom_county(crs = "NAD83")  + 
+  aes(fill = SID74/BIR74)
+#> Joining with `by = join_by(fips)`
+```
+
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+# define\_layer\_sf\_temp build
+
+``` r
+northcarolina_county_reference0 <-
+  sf::st_read(system.file("shape/nc.shp", package="sf")) |>
+  dplyr::rename(county_name = NAME,
+                fips = FIPS) |>
+  dplyr::select(county_name, fips, geometry)
+#> Reading layer `nc' from data source 
+#>   `/Library/Frameworks/R.framework/Versions/4.2/Resources/library/sf/shape/nc.shp' 
+#>   using driver `ESRI Shapefile'
+#> Simple feature collection with 100 features and 14 fields
+#> Geometry type: MULTIPOLYGON
+#> Dimension:     XY
+#> Bounding box:  xmin: -84.32385 ymin: 33.88199 xmax: -75.45698 ymax: 36.58965
+#> Geodetic CRS:  NAD27
+
+return_st_bbox_df <- function(sf_df){
+  
+  bb <- sf::st_bbox(sf_df)
+
+  data.frame(xmin = bb[1], ymin = bb[2],
+             xmax = bb[3], ymax = bb[4])
+
+}
+
+
+define_layer_sf_temp <- function(ref_df,
+                                 geom = NULL, 
+                                 geom_default = ggplot2::GeomSf, 
+                                 required_aes, 
+                                 compute_panel = NULL, 
+                                 mapping = NULL,
+                                 data = NULL,
+                                 position = "identity",
+                                 na.rm = FALSE,
+                                 show.legend = NA,
+                                 inherit.aes = TRUE, 
+                                 crs = "NAD27",
+                                 ...){
+
+
+ref_df_w_bb <- 
+  ref_df |>
+  dplyr::mutate(bb =
+                  purrr::map(geometry,
+                             return_st_bbox_df)) |>
+  tidyr::unnest(bb) |>
+  data.frame()
+
+compute_panel_county <- function(data, scales){
+  
+  data |> 
+    dplyr::inner_join(ref_df_w_bb)
+  
+}
+
+StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
+                                `_inherit` = ggplot2::Stat,
+                                required_aes = required_aes,
+                                compute_panel = NULL)
+
+
+c(ggplot2::layer_sf(
+              stat = StatNcfips,  # proto object from step 2
+              geom = ggplot2::GeomSf,  # inherit other behavior
+              data = data,
+              mapping = mapping,
+              position = position,
+              show.legend = show.legend,
+              inherit.aes = inherit.aes,
+              params = rlang::list2(na.rm = na.rm, ...)
+              ),
+              
+              coord_sf(crs = crs,
+                       default_crs = sf::st_crs(crs),
+                       datum = crs,
+                       default = TRUE)
+     )
+  }
+
+
+
+geom_county <- function(...){
+  
+  sf::st_read(system.file("shape/nc.shp", package="sf")) |>
+  dplyr::rename(county_name = NAME,
+                fips = FIPS) |>
+  dplyr::select(county_name, fips, geometry) |>
+  define_layer_sf_temp(required_aes = "fips|county_name",
+                       ...)
+  
+}
+
+
+
+
+ggnorthcarolina::northcarolina_county_flat |> 
+  ggplot() + 
+  aes(fips = fips) + 
+  geom_county()  + 
+  aes(fill = SID74/BIR74)
+#> Reading layer `nc' from data source 
+#>   `/Library/Frameworks/R.framework/Versions/4.2/Resources/library/sf/shape/nc.shp' 
+#>   using driver `ESRI Shapefile'
+#> Simple feature collection with 100 features and 14 fields
+#> Geometry type: MULTIPOLYGON
+#> Dimension:     XY
+#> Bounding box:  xmin: -84.32385 ymin: 33.88199 xmax: -75.45698 ymax: 36.58965
+#> Geodetic CRS:  NAD27
+#> Joining with `by = join_by(fips)`
+```
+
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
+create_layer_sf_temp <- function(ref_df, 
+                                 fun_name ="geom_geo", 
+                                 required_aes,
+                                 geom = "sf"){
+
+  assign(x = fun_name, 
+         value = function(...){
+           
+  
+  define_layer_sf_temp(ref_df = ref_df,
+    required_aes = required_aes,
+    compute_panel = compute_panel,
+    geom = geom,
+    ...)  },
+  pos = 1
+  )
+  
+}
+
+
+
+sf::st_read(system.file("shape/nc.shp", package="sf")) |>
+  dplyr::rename(county_name = NAME,
+                fips = FIPS) |>
+  dplyr::select(county_name, fips, geometry) |>
+  create_layer_sf_temp(fun_name = "geom_county",
+                       required_aes = "county_name|fips")
+
+
+ggnorthcarolina::northcarolina_county_flat |> 
+  ggplot() + 
+  aes(fips = fips) + 
+  geom_county()  + 
+  aes(fill = SID74/BIR74)
+#> Reading layer `nc' from data source 
+#>   `/Library/Frameworks/R.framework/Versions/4.2/Resources/library/sf/shape/nc.shp' 
+#>   using driver `ESRI Shapefile'
+#> Simple feature collection with 100 features and 14 fields
+#> Geometry type: MULTIPOLYGON
+#> Dimension:     XY
+#> Bounding box:  xmin: -84.32385 ymin: 33.88199 xmax: -75.45698 ymax: 36.58965
+#> Geodetic CRS:  NAD27
+#> Joining with `by = join_by(fips)`
+```
+
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
 # Part II. Packaging and documentation 🚧 ✅
 
 ## Phase 1. Minimal working package
@@ -654,7 +907,7 @@ ggplot(cars) +
 #> Ignoring unknown parameters: `geom_default`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ### Bit H. Chosen a license? 🚧 ✅
 
