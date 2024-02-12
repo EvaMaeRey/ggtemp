@@ -492,6 +492,135 @@ last_plot() +
 
 ![](README_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
 
+# Dates extension example - geom progression
+
+``` r
+
+
+compute_group_progression <- function(data, scales){
+  
+  data |>
+    mutate(xend = lag(x)) |>
+    mutate(yend = lag(y)) 
+  
+}
+
+
+create_layer_temp(fun_name = "geom_progression",
+                  compute_group = compute_group_progression,
+                  required_aes = c("x","y"),
+                  geom_default = "segment")
+
+
+tibble::tribble(~event, ~date,
+                "Announcement", 0,
+                "deadline", 3,
+                "extended\ndeadline", 5) |>
+  ggplot() + 
+  aes(x = date, y = "Conf") + 
+  geom_progression(arrow = arrow(ends = "first")) + 
+  geom_point() +
+  geom_text(aes(label = event), vjust = 0)
+#> Warning: Removed 1 row containing missing values or values outside the scale range
+#> (`geom_segment()`).
+```
+
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+# in 100
+
+``` r
+tibble(outcome = sample(0:1, 1000, replace = T)) |>
+  count(outcome) |>
+  mutate(percent = round(100*n/sum(n))) |>
+  uncount(percent) |>
+  mutate(id = row_number()-1) |>
+  ggplot() + 
+  aes(x = id %% 10, y = id %/% 10) +
+  geom_tile() + 
+  aes(fill = outcome)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
+
+
+compute_panel_100 <- function(data, scales){
+  
+  data  |>
+  count(outcome) |>
+  mutate(percent = round(100*n/sum(n))) |>
+  uncount(percent) |>
+  mutate(id = row_number()-1) |>
+  mutate(x = id %% 10) |>
+  mutate(y = id %/% 10) |>
+  mutate(width = .7, height = .7)
+  
+  
+}
+
+create_layer_temp(fun_name = "geom_100",
+                  compute_panel = compute_panel_100,
+                  required_aes = c("outcome"),
+                  geom_default = "tile")
+
+
+Titanic %>% 
+  as.data.frame() %>% 
+  uncount(Freq) |>
+  ggplot() + 
+  aes(outcome = Survived) + 
+  geom_100() + 
+  geom_100(geom = "text", 
+           mapping = aes(label = after_stat(outcome)))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
+
+``` r
+
+last_plot() +
+  aes(fill = after_stat(outcome)) +
+  labs(fill = "Survived")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-13-3.png)<!-- -->
+
+``` r
+
+
+last_plot() + 
+  facet_wrap(~Sex)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-13-4.png)<!-- -->
+
+``` r
+
+last_plot() + 
+  facet_grid(Sex ~ Age) 
+```
+
+![](README_files/figure-gfm/unnamed-chunk-13-5.png)<!-- -->
+
+``` r
+
+# fails, no propagation of alpha var...
+last_plot() + 
+  aes(alpha = Age)
+#> Warning: Using alpha for a discrete variable is not advised.
+```
+
+![](README_files/figure-gfm/unnamed-chunk-13-6.png)<!-- -->
+
+``` r
+
+# Look at https://liamgilbey.github.io/ggwaffle/
+```
+
+## ggmonth
+
 # spatial ‘status quo’ of ggplot2 extension cookbook
 
 ``` r
@@ -606,7 +735,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 # define\_layer\_sf\_temp build
 
@@ -624,7 +753,32 @@ northcarolina_county_reference0 <-
 #> Dimension:     XY
 #> Bounding box:  xmin: -84.32385 ymin: 33.88199 xmax: -75.45698 ymax: 36.58965
 #> Geodetic CRS:  NAD27
+```
 
+``` r
+return_st_bbox_df <- function(sf_df){
+  
+  bb <- sf::st_bbox(sf_df)
+
+  data.frame(xmin = bb[1], ymin = bb[2],
+             xmax = bb[3], ymax = bb[4])
+
+}
+
+add_xy_coords <- function(geo_df){
+
+geo_df |>
+    dplyr::pull(geometry) |>
+    sf::st_zm() |>
+    sf::st_point_on_surface() ->
+  points_sf
+
+the_coords <- do.call(rbind, sf::st_geometry(points_sf)) %>%
+  tibble::as_tibble() %>% setNames(c("x","y"))
+
+cbind(geo_df, the_coords)
+
+}
 
 define_layer_sf_temp <- function(ref_df,
                                  geom = NULL, 
@@ -662,7 +816,6 @@ StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
                                 required_aes = required_aes,
                                 compute_panel = compute_panel_county)
 
-
   if(is.null(geom)){geom <- geom_default}
 
  c(ggplot2::layer_sf(
@@ -682,10 +835,11 @@ StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
                        default = TRUE)
      )
 }
+```
 
+### Try it out
 
-
-
+``` r
 geom_county2 <- function(...){
   
  sf::st_read(system.file("shape/nc.shp", package="sf")) |>
@@ -728,7 +882,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
 create_layer_sf_temp <- function(ref_df, 
@@ -788,7 +942,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ``` r
 rnaturalearth::ne_countries(  
@@ -821,7 +975,7 @@ gapminder::gapminder |>
 #> Joining with `by = join_by(country_name)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
 
@@ -846,65 +1000,65 @@ heritage |>
   aes(country_name = country) +
   geom_country() +
   aes(fill = count) + 
-  facet_grid(~year)
+  facet_grid(~year) + 
+  geom_country(geom = "text", mapping = aes(label = paste(country, count, sep = "\n")))
+#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
+#> st_point_on_surface may not give correct results for longitude/latitude data
+
 #> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
 #> st_point_on_surface may not give correct results for longitude/latitude data
 #> Joining with `by = join_by(country_name)`
 #> Joining with `by = join_by(country_name)`
+#> Joining with `by = join_by(country_name)`
+#> Joining with `by = join_by(country_name)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-2.png)<!-- -->
 
 # Part II. Packaging and documentation 🚧 ✅
 
 ## Phase 1. Minimal working package
 
-### Bit A. Created files for package archetecture, running `devtools::create(".")` in interactive session. 🚧 ✅
+  - Bit A. Created files for package archetecture, running
+    `devtools::create(".")` in interactive session. ✅
+  - Bit B. Added roxygen skeleton? 🚧
+  - Bit C. Managed dependencies ? 🚧
 
-``` r
-devtools::create(".")
-```
-
-### Bit B. Added roxygen skeleton? 🚧 ✅
-
-Use a roxygen skeleton for auto documentation and making sure proposed
-functions are *exported*. Generally, early on, I don’t do much
-(anything) in terms of filling in the skeleton for documentation,
-because things may change.
-
-### Bit C. Managed dependencies ? 🚧 ✅
-
-Package dependencies managed, i.e. `depend::function()` in proposed
-functions and declared in the DESCRIPTION
+<!-- end list -->
 
 ``` r
 usethis::use_package("ggplot2")
 ```
 
-### Bit D. Moved functions R folder? 🚧 ✅
+  - Bit D. Moved functions R folder? ✅
 
-Use new {readme2pkg} function to do this from readme…
+<!-- end list -->
 
 ``` r
 readme2pkg::chunk_to_r("define_layer_temp")
 readme2pkg::chunk_to_r("create_layer_temp")
+readme2pkg::chunk_to_r("define_layer_sf_temp")
+readme2pkg::chunk_to_r("create_layer_sf_temp")
 ```
 
-### Bit E. Run `devtools::check()` and addressed errors. 🚧 ✅
+  - Run `devtools::check()` and addressed errors. 🚧
+
+<!-- end list -->
 
 ``` r
 devtools::check(pkg = ".")
 ```
 
-### Bit F. Build package 🚧 ✅
+  - ✅
+
+<!-- end list -->
 
 ``` r
 devtools::build()
 ```
 
-### Bit G. Write and test traditional README that uses built package. 🚧 ✅
-
-The goal of the {ggtemp} package is to …
+  - Bit G. Write and test traditional README that uses built package. 🚧
+    ✅
 
 Install package with:
 
@@ -945,9 +1099,11 @@ ggplot(cars) +
 #> Ignoring unknown parameters: `geom_default`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
-### Bit H. Chosen a license? 🚧 ✅
+  - Bit H. Chosen a license? 🚧 ✅
+
+<!-- end list -->
 
 ``` r
 usethis::use_mit_license()
@@ -955,7 +1111,9 @@ usethis::use_mit_license()
 #> Drive/r_packages/ggtemp'
 ```
 
-### Bit I. Add lifecycle badge (experimental)
+  - Bit I. Add lifecycle badge (experimental)
+
+<!-- end list -->
 
 ``` r
 usethis::use_lifecycle_badge("experimental")
@@ -1036,6 +1194,7 @@ all[11:17]
 devtools::check(pkg = ".")
 #> ℹ Updating ggtemp documentation
 #> ℹ Loading ggtemp
+#> Error: R CMD check found WARNINGs
 ```
 
 ## Non-developer introduction to package (and test of installed package)

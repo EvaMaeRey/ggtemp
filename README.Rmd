@@ -436,6 +436,118 @@ last_plot() +
    aes(color = wt > 3.4)
 ```
 
+# Dates extension example - geom progression
+
+```{r}
+
+
+compute_group_progression <- function(data, scales){
+  
+  data |>
+    mutate(xend = lag(x)) |>
+    mutate(yend = lag(y)) 
+  
+}
+
+
+create_layer_temp(fun_name = "geom_progression",
+                  compute_group = compute_group_progression,
+                  required_aes = c("x","y"),
+                  geom_default = "segment")
+
+
+tibble::tribble(~event, ~date,
+                "Announcement", 0,
+                "deadline", 3,
+                "extended\ndeadline", 5) |>
+  ggplot() + 
+  aes(x = date, y = "Conf") + 
+  geom_progression(arrow = arrow(ends = "first")) + 
+  geom_point() +
+  geom_text(aes(label = event), vjust = 0)
+
+
+
+```
+
+
+
+
+# in 100
+
+```{r}
+tibble(outcome = sample(0:1, 1000, replace = T)) |>
+  count(outcome) |>
+  mutate(percent = round(100*n/sum(n))) |>
+  uncount(percent) |>
+  mutate(id = row_number()-1) |>
+  ggplot() + 
+  aes(x = id %% 10, y = id %/% 10) +
+  geom_tile() + 
+  aes(fill = outcome)
+
+
+compute_panel_100 <- function(data, scales){
+  
+  data  |>
+  count(outcome) |>
+  mutate(percent = round(100*n/sum(n))) |>
+  uncount(percent) |>
+  mutate(id = row_number()-1) |>
+  mutate(x = id %% 10) |>
+  mutate(y = id %/% 10) |>
+  mutate(width = .7, height = .7)
+  
+  
+}
+
+create_layer_temp(fun_name = "geom_100",
+                  compute_panel = compute_panel_100,
+                  required_aes = c("outcome"),
+                  geom_default = "tile")
+
+
+Titanic %>% 
+  as.data.frame() %>% 
+  uncount(Freq) |>
+  ggplot() + 
+  aes(outcome = Survived) + 
+  geom_100() + 
+  geom_100(geom = "text", 
+           mapping = aes(label = after_stat(outcome)))
+
+last_plot() +
+  aes(fill = after_stat(outcome)) +
+  labs(fill = "Survived")
+
+
+last_plot() + 
+  facet_wrap(~Sex)
+
+last_plot() + 
+  facet_grid(Sex ~ Age) 
+
+# fails, no propagation of alpha var...
+last_plot() + 
+  aes(alpha = Age)
+
+# Look at https://liamgilbey.github.io/ggwaffle/
+
+
+```
+
+
+
+## ggmonth
+
+```{r}
+
+
+```
+
+
+## Diverging bar chart...
+
 
 # spatial 'status quo' of ggplot2 extension cookbook
 
@@ -543,7 +655,32 @@ northcarolina_county_reference0 <-
   dplyr::rename(county_name = NAME,
                 fips = FIPS) |>
   dplyr::select(county_name, fips, geometry)
+```
 
+```{r define_layer_sf_temp}
+return_st_bbox_df <- function(sf_df){
+  
+  bb <- sf::st_bbox(sf_df)
+
+  data.frame(xmin = bb[1], ymin = bb[2],
+             xmax = bb[3], ymax = bb[4])
+
+}
+
+add_xy_coords <- function(geo_df){
+
+geo_df |>
+    dplyr::pull(geometry) |>
+    sf::st_zm() |>
+    sf::st_point_on_surface() ->
+  points_sf
+
+the_coords <- do.call(rbind, sf::st_geometry(points_sf)) %>%
+  tibble::as_tibble() %>% setNames(c("x","y"))
+
+cbind(geo_df, the_coords)
+
+}
 
 define_layer_sf_temp <- function(ref_df,
                                  geom = NULL, 
@@ -581,7 +718,6 @@ StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
                                 required_aes = required_aes,
                                 compute_panel = compute_panel_county)
 
-
   if(is.null(geom)){geom <- geom_default}
 
  c(ggplot2::layer_sf(
@@ -601,10 +737,11 @@ StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
                        default = TRUE)
      )
 }
+```
 
+### Try it out
 
-
-
+```{r}
 geom_county2 <- function(...){
   
  sf::st_read(system.file("shape/nc.shp", package="sf")) |>
@@ -628,7 +765,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 
 
 
-```{r}
+```{r create_layer_sf_temp}
 create_layer_sf_temp <- function(ref_df, 
                                  fun_name ="geom_my_sf", 
                                  required_aes, 
@@ -709,61 +846,47 @@ heritage |>
   aes(country_name = country) +
   geom_country() +
   aes(fill = count) + 
-  facet_grid(~year)
+  facet_grid(~year) + 
+  geom_country(geom = "text", mapping = aes(label = paste(country, count, sep = "\n")))
 ```
 
 # Part II. Packaging and documentation  🚧 ✅ 
 
 ## Phase 1. Minimal working package
 
-### Bit A. Created files for package archetecture, running `devtools::create(".")` in interactive session. 🚧 ✅
+- Bit A. Created files for package archetecture, running `devtools::create(".")` in interactive session. ✅
+- Bit B. Added roxygen skeleton? 🚧 
+- Bit C. Managed dependencies ? 🚧 
 
-
-```{r, eval = F}
-devtools::create(".")
-```
-
-### Bit B. Added roxygen skeleton? 🚧 ✅
-
-Use a roxygen skeleton for auto documentation and making sure proposed functions are *exported*.  Generally, early on, I don't do much (anything) in terms of filling in the skeleton for documentation, because things may change.
-
-### Bit C. Managed dependencies ? 🚧 ✅
-
-Package dependencies managed, i.e. `depend::function()` in proposed functions and declared in the DESCRIPTION
 
 ```{r, eval = F}
 usethis::use_package("ggplot2")
 ```
 
-
-### Bit D. Moved functions R folder? 🚧 ✅
-
-Use new {readme2pkg} function to do this from readme...
+- Bit D. Moved functions R folder? ✅
 
 ```{r}
 readme2pkg::chunk_to_r("define_layer_temp")
 readme2pkg::chunk_to_r("create_layer_temp")
+readme2pkg::chunk_to_r("define_layer_sf_temp")
+readme2pkg::chunk_to_r("create_layer_sf_temp")
 ```
 
-
-
-
-### Bit E. Run `devtools::check()` and addressed errors. 🚧 ✅
+- Run `devtools::check()` and addressed errors. 🚧 
 
 ```{r, results='hide', error=T, eval = F}
 devtools::check(pkg = ".")
 ```
 
-### Bit F. Build package 🚧 ✅
+-  ✅
 
 ```{r, eval = F}
 devtools::build()
 ```
 
 
-### Bit G. Write and test traditional README that uses built package. 🚧 ✅ 
+- Bit G. Write and test traditional README that uses built package. 🚧 ✅ 
 
-The goal of the {ggtemp} package is to ...
 
 Install package with:
 
@@ -803,18 +926,16 @@ ggplot(cars) +
   aes(x0 = speed, y0 = dist, r = 1) + 
   geom_circle_points()
 
-
-
 ```
 
-### Bit H. Chosen a license? 🚧 ✅
+- Bit H. Chosen a license? 🚧 ✅
 
 
 ```{r}
 usethis::use_mit_license()
 ```
 
-### Bit I. Add lifecycle badge (experimental)
+- Bit I. Add lifecycle badge (experimental)
 
 ```{r}
 usethis::use_lifecycle_badge("experimental")
@@ -824,7 +945,6 @@ usethis::use_lifecycle_badge("experimental")
 ## Phase 2: Listen & iterate 🚧 ✅
 
 Try to get feedback from experts on API, implementation, default decisions.  Is there already work that solves this problem? 
-
 
 ## Phase 3: Let things settle
 
