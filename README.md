@@ -119,65 +119,6 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
 ## Experimental: `define_layer_temp()` combines 2 and 3 in using a temp stat
 
 ``` r
-compute_group_default <-  function (self, data, scales) {
-    cli::cli_abort("Not implemented.")
-}
-
-
-compute_panel_default <- function (self, data, scales, ...) {
-    if (empty(data)) 
-        return(ggplot2:::data_frame0())
-    groups <- split(data, data$group)
-    stats <- lapply(groups, function(group) {
-        self$compute_group(data = group, scales = scales, ...)
-    })
-    non_constant_columns <- character(0)
-    stats <- mapply(function(new, old) {
-        if (empty(new)) 
-            return(ggplot2:::data_frame0())
-        old <- old[, !(names(old) %in% names(new)), drop = FALSE]
-        non_constant <- vapply(old, vec_unique_count, integer(1)) > 
-            1L
-        non_constant_columns <<- c(non_constant_columns, names(old)[non_constant])
-        vec_cbind(new, old[rep(1, nrow(new)), , drop = FALSE])
-    }, stats, groups, SIMPLIFY = FALSE)
-    non_constant_columns <- ggplot2:::unique0(non_constant_columns)
-    dropped <- non_constant_columns[!non_constant_columns %in% 
-        self$dropped_aes]
-    if (length(dropped) > 0) {
-        cli::cli_warn(c("The following aesthetics were dropped during statistical transformation: {.field {dropped}}.", 
-            i = "This can happen when ggplot fails to infer the correct grouping structure in the data.", 
-            i = "Did you forget to specify a {.code group} aesthetic or to convert a numerical variable into a factor?"))
-    }
-    data_new <- vec_rbind0(!!!stats)
-    data_new[, !names(data_new) %in% non_constant_columns, drop = FALSE]
-}
-
-
-
-
-compute_layer_default <- function (self, data, params, layout) {
-    ggplot2:::check_required_aesthetics(self$required_aes, c(names(data), 
-        names(params)), ggplot2:::snake_class(self))
-    required_aes <- intersect(names(data), unlist(strsplit(self$required_aes, 
-        "|", fixed = TRUE)))
-    data <- remove_missing(data, params$na.rm, c(required_aes, 
-        self$non_missing_aes), ggplot2:::snake_class(self), finite = TRUE)
-    params <- params[intersect(names(params), self$parameters())]
-    args <- c(list(data = quote(data), scales = quote(scales)), 
-        params)
-    ggplot2:::dapply(data, "PANEL", function(data) {
-        scales <- layout$get_scales(data$PANEL[1])
-          rlang::try_fetch(rlang::inject(self$compute_panel(data = data, scales = scales, 
-            !!!params)), error = function(cnd) {
-            cli::cli_warn("Computation failed in {.fn {ggplot2:::snake_class(self)}}.", 
-                parent = cnd)
-            ggplot2:::data_frame0()
-        })
-    })
-}
-
-
 define_layer_temp <- function(
   # finish_layer = 
   # retransform
@@ -189,9 +130,9 @@ define_layer_temp <- function(
   dropped_aes = character(), 
   optional_aes = character(),
   non_missing_aes = character(),
-  compute_group = compute_group_default,
-  compute_panel = compute_panel_default, 
-  compute_layer = compute_layer_default,
+  compute_group = NULL,
+  compute_panel = NULL, 
+  compute_layer = NULL,
   geom = NULL,
   geom_default = ggplot2::GeomPoint, 
   mapping = NULL,
@@ -206,9 +147,13 @@ define_layer_temp <- function(
 StatTemp <- ggproto(
   `_class` = "StatTemp",
   `_inherit` = ggplot2::Stat,
-  compute_group = compute_group,
-  compute_panel = compute_panel,
+  # compute_group = compute_group,
+  # compute_panel = compute_panel,
   required_aes = required_aes)
+
+if(!is.null(compute_group)){StatTemp$compute_group <- compute_group}
+if(!is.null(compute_panel)){StatTemp$compute_panel <- compute_panel}
+if(!is.null(compute_layer)){StatTemp$compute_layer <- compute_layer}
 
   if(is.null(geom)){geom <- geom_default}
 
@@ -380,11 +325,6 @@ ggplot(cars) +
   aes(x0 = speed, y0 =  dist, r = 3) + 
   stat_circle(alpha = .4) + 
   coord_equal()
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
@@ -419,11 +359,6 @@ ggplot(cars[1:8,] ) +
   aes(x = speed, y =  dist, r = 1) + 
   geom_star() + 
   coord_equal()
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
@@ -432,13 +367,6 @@ ggplot(cars[1:8,] ) +
 
 last_plot() + 
   geom_star(geom = "point", color = "magenta")
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
@@ -462,11 +390,6 @@ ggdoremi:::join_phrases_drm_lyrics(twinkle_lyrics) |>
   aes(fill = doremi, color = doremi)
 #> Joining with `by = join_by(drm)`
 #> Joining with `by = join_by(id_phrase, id_in_phrase)`
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
@@ -485,6 +408,60 @@ last_plot()$data |> head()
 #> 5         1            5 l     la      742. lit        1
 #> 6         1            6 l     la      742. tle        1
 ```
+
+``` r
+compute_panel_heart <- function(data, scales){
+
+  data %>%
+  mutate(group = row_number()) %>%
+  tidyr::crossing(around = 0:30/30) %>%
+    dplyr::mutate(
+      y = y + r*.8 * (
+        .85 * cos(2*pi*around)
+        - .35 * cos(2 * 2*pi*around)
+        - .25 * cos(3 * 2*pi*around)
+        - .05 * cos(4 * 2*pi*around)
+      ),
+      x = x + r * (sin(2*pi*around)^3))
+
+}
+
+
+create_layer_temp(fun_name = "geom_heart", 
+                  compute_panel = compute_panel_heart,
+                  required_aes = c("x", "y", "r"),
+                  geom_default ="polygon")
+
+alphabet_drm <- "ddsslls ffmmrrrrd ssfmmr sfmmr ddsslls ffmmrrd"
+alphabet_lyrics <- 
+"a b c d e f g
+h i j k l m n o p
+q r s t u v
+w x y & z
+val-en-tines day a b c's
+hope its sweet as it can be"
+
+
+
+alphabet_drm |>
+  ggdoremi:::join_phrases_drm_lyrics(alphabet_lyrics) |>
+ ggplot() + 
+   aes(y = as.numeric(drm), x = id_in_phrase, r = .58, label = lyric) + 
+   facet_wrap(~id_phrase, scales = "free_x") + 
+  geom_hline(yintercept = c(8,10,12), color = "grey") + 
+  geom_line(color = "black", linetype = "dashed") +
+  geom_heart(fill = "white", color = "black") +
+  geom_text(size = 5, alpha = 0 ) +
+  # coord_equal() + 
+  # aes(fill = doremi, color = doremi) +
+  ggstamp::theme_void_fill("white") +
+  theme(text = element_text(color = "white")) + 
+  theme(panel.spacing.x = unit(0, "in"))
+#> Joining with `by = join_by(drm)`
+#> Joining with `by = join_by(id_phrase, id_in_phrase)`
+```
+
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 # geom\_xmean on the fly with compute group…
 
@@ -511,17 +488,9 @@ ggplot(cars) +
   geom_point() + 
   geom_xmean() + 
   aes(color = speed > 18)
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-#> Warning: Computation failed in `stat_temp()`.
-#> Caused by error in `inject()`:
-#> ! attempt to apply non-function
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 ## compute\_oval\_minmax
 
@@ -571,28 +540,17 @@ ggplot(mtcars) +
   aes(x = wt, y = mpg) +
   geom_point() +
   geom_oval_xy_range()
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-#> Warning: Computation failed in `stat_temp()`.
-#> Caused by error in `inject()`:
-#> ! attempt to apply non-function
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ``` r
 
 last_plot() + 
    aes(color = wt > 3.4)
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): Computation failed in `stat_temp()`.
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
 
 # Dates extension example - geom progression
 
@@ -623,17 +581,11 @@ tibble::tribble(~event, ~date,
   geom_progression(arrow = arrow(ends = "first")) + 
   geom_point() +
   geom_text(aes(label = event), vjust = 0)
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-#> Warning: Computation failed in `stat_temp()`.
-#> Caused by error in `inject()`:
-#> ! attempt to apply non-function
+#> Warning: Removed 1 row containing missing values or values outside the scale range
+#> (`geom_segment()`).
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 # in 100
 
@@ -649,7 +601,7 @@ tibble(outcome = sample(0:1, 1000, replace = T)) |>
   aes(fill = outcome)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 ``` r
 
@@ -682,55 +634,35 @@ Titanic %>%
   geom_100() + 
   geom_100(geom = "text", 
            mapping = aes(label = after_stat(outcome)))
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
 
 ``` r
 
 last_plot() +
   aes(fill = after_stat(outcome)) +
   labs(fill = "Survived")
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-3.png)<!-- -->
 
 ``` r
 
 
 last_plot() + 
   facet_wrap(~Sex)
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-4.png)<!-- -->
 
 ``` r
 
 last_plot() + 
   facet_grid(Sex ~ Age) 
-#> Warning in formals(fun): argument is not a function
-
-#> Warning in formals(fun): argument is not a function
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-5.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-5.png)<!-- -->
 
 ``` r
 
@@ -738,11 +670,9 @@ last_plot() +
 last_plot() + 
   aes(alpha = Age)
 #> Warning: Using alpha for a discrete variable is not advised.
-#> argument is not a function
-#> argument is not a function
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-6.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-6.png)<!-- -->
 
 ``` r
 
@@ -891,7 +821,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 # define\_layer\_sf\_temp build
 
@@ -1037,7 +967,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ``` r
   
@@ -1047,7 +977,7 @@ last_plot() +
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
 
 ``` r
 
@@ -1062,7 +992,7 @@ last_plot() +
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-3.png)<!-- -->
 
 ``` r
 create_layer_sf_temp <- function(ref_df, 
@@ -1125,7 +1055,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
 
@@ -1145,7 +1075,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-2.png)<!-- -->
 
 ``` r
 library(tmap)
@@ -1193,7 +1123,7 @@ NLD_prov |>
 #> Joining with `by = join_by(prov_code)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ``` r
 
@@ -1215,7 +1145,7 @@ NLD_muni |>
 #> Joining with `by = join_by(muni_code)`Joining with `by = join_by(muni_code)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-2.png)<!-- -->
 
 ``` r
 rnaturalearth::ne_countries(  
@@ -1248,7 +1178,7 @@ gapminder::gapminder |>
 #> Joining with `by = join_by(country_name)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 ``` r
 
@@ -1286,7 +1216,7 @@ heritage |>
 #> Joining with `by = join_by(country_name)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-21-2.png)<!-- -->
 
 # Part II. Packaging and documentation 🚧 ✅
 
@@ -1370,7 +1300,7 @@ ggplot(cars) +
   geom_circle_points()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
   - Bit H. Chosen a license? 🚧 ✅
 
