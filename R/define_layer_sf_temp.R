@@ -26,6 +26,7 @@ define_layer_sf_temp <- function(ref_df,
                                  geom = NULL, 
                                  geom_default = ggplot2::GeomSf, 
                                  required_aes, 
+                                 default_aes = ggplot2::aes(),
                                  compute_panel = NULL, 
                                  mapping = NULL,
                                  data = NULL,
@@ -33,7 +34,7 @@ define_layer_sf_temp <- function(ref_df,
                                  na.rm = FALSE,
                                  show.legend = NA,
                                  inherit.aes = TRUE, 
-                                 crs = "NAD27",
+                                 crs = sf::st_crs(ref_df),
                                  ...){
 
 
@@ -56,7 +57,8 @@ compute_panel_county <- function(data, scales){
 StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
                                 `_inherit` = ggplot2::Stat,
                                 required_aes = required_aes,
-                                compute_panel = compute_panel_county)
+                                compute_panel = compute_panel_county,
+                               default_aes = default_aes)
 
   if(is.null(geom)){geom <- geom_default}
 
