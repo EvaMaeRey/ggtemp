@@ -10,7 +10,8 @@ output:
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = T
+  eval = T,
+  warning = F
 )
 ```
 
@@ -396,79 +397,79 @@ last_plot() +
 ```
 
 
-### a cute musical example...
+<!-- ### a cute musical example... -->
 
-```{r, fig.width=12, fig.height=7}
-twinkle_little_star_drm <- "ddsslls ffmmrrd"
-twinkle_lyrics <- "Twin-kle twin-kle lit-tle star
-How I won-der what you are"
-
-
-twinkle_little_star_drm |>
-ggdoremi:::join_phrases_drm_lyrics(twinkle_lyrics) |>
- ggplot() + 
-   aes(y = drm, x = id_in_phrase, r = .58, label = lyric) + 
-   facet_wrap(~id_phrase) + 
-  geom_star(alpha = .4) +
-  geom_text(size = 5) +
-  coord_equal() + 
-  aes(fill = doremi, color = doremi)
-
-last_plot()$data |> head()
-```
+<!-- ```{r, fig.width=12, fig.height=7} -->
+<!-- twinkle_little_star_drm <- "ddsslls ffmmrrd" -->
+<!-- twinkle_lyrics <- "Twin-kle twin-kle lit-tle star -->
+<!-- How I won-der what you are" -->
 
 
-```{r, fig.width=11, fig.height=6.5}
-compute_panel_heart <- function(data, scales){
+<!-- twinkle_little_star_drm |> -->
+<!-- ggdoremi:::join_phrases_drm_lyrics(twinkle_lyrics) |> -->
+<!--  ggplot() +  -->
+<!--    aes(y = drm, x = id_in_phrase, r = .58, label = lyric) +  -->
+<!--    facet_wrap(~id_phrase) +  -->
+<!--   geom_star(alpha = .4) + -->
+<!--   geom_text(size = 5) + -->
+<!--   coord_equal() +  -->
+<!--   aes(fill = doremi, color = doremi) -->
 
-  data %>%
-  mutate(group = row_number()) %>%
-  tidyr::crossing(around = 0:30/30) %>%
-    dplyr::mutate(
-      y = y + r*.8 * (
-        .85 * cos(2*pi*around)
-        - .3 * cos(2 * 2*pi*around)
-        - .2 * cos(3 * 2*pi*around)
-        - .05 * cos(4 * 2*pi*around)
-      ),
-      x = x + r * (sin(2*pi*around)^3))
-
-}
+<!-- last_plot()$data |> head() -->
+<!-- ``` -->
 
 
-create_layer_temp(fun_name = "geom_heart", 
-                  compute_panel = compute_panel_heart,
-                  required_aes = c("x", "y", "r"),
-                  geom_default ="polygon")
+<!-- ```{r, fig.width=11, fig.height=6.5} -->
+<!-- compute_panel_heart <- function(data, scales){ -->
 
-alphabet_drm <- "ddsslls ffmmrrrrd ssfmmr sfmmr ddsslls ffmmrrd"
-alphabet_lyrics <- 
-"A B C D E F G
-H I J K L M N O P
-Q R S T U V
-W X Y & Z
-Val-en-tine's Day A B C's
-A few hearts for you from me!"
+<!--   data %>% -->
+<!--   mutate(group = row_number()) %>% -->
+<!--   tidyr::crossing(around = 0:30/30) %>% -->
+<!--     dplyr::mutate( -->
+<!--       y = y + r*.8 * ( -->
+<!--         .85 * cos(2*pi*around) -->
+<!--         - .3 * cos(2 * 2*pi*around) -->
+<!--         - .2 * cos(3 * 2*pi*around) -->
+<!--         - .05 * cos(4 * 2*pi*around) -->
+<!--       ), -->
+<!--       x = x + r * (sin(2*pi*around)^3)) -->
+
+<!-- } -->
+
+
+<!-- create_layer_temp(fun_name = "geom_heart",  -->
+<!--                   compute_panel = compute_panel_heart, -->
+<!--                   required_aes = c("x", "y", "r"), -->
+<!--                   geom_default ="polygon") -->
+
+<!-- alphabet_drm <- "ddsslls ffmmrrrrd ssfmmr sfmmr ddsslls ffmmrrd" -->
+<!-- alphabet_lyrics <-  -->
+<!-- "A B C D E F G -->
+<!-- H I J K L M N O P -->
+<!-- Q R S T U V -->
+<!-- W X Y & Z -->
+<!-- Val-en-tine's Day A B C's -->
+<!-- A few hearts for you from me!" -->
 
 
 
-alphabet_drm |>
-  ggdoremi:::join_phrases_drm_lyrics(alphabet_lyrics) |>
- ggplot() + 
-   aes(y = as.numeric(drm), x = id_in_phrase, r = .58, label = lyric) + 
-   facet_wrap(~id_phrase, scales = "free_x") + 
-  geom_hline(yintercept = c(8,10,12), color = "grey") + 
-  geom_line(color = "black", linetype = "dashed") +
-  geom_heart(fill = "white", color = "black", alpha = 1) +
-  geom_text(size = 3, nudge_y = -.05, aes(alpha = nchar(lyric) > 1 | lyric %in% letters[1:4] | lyric == "&" |lyric %in% LETTERS[1:4]), show.legend = F) +
-  # coord_equal() + 
-  # aes(fill = doremi, color = doremi) +
-  ggstamp::theme_void_fill("white") +
-  theme(text = element_text(color = "white")) + 
-  theme(panel.spacing.x = unit(0, "in"))
-  
+<!-- alphabet_drm |> -->
+<!--   ggdoremi:::join_phrases_drm_lyrics(alphabet_lyrics) |> -->
+<!--  ggplot() +  -->
+<!--    aes(y = as.numeric(drm), x = id_in_phrase, r = .58, label = lyric) +  -->
+<!--    facet_wrap(~id_phrase, scales = "free_x") +  -->
+<!--   geom_hline(yintercept = c(8,10,12), color = "grey") +  -->
+<!--   geom_line(color = "black", linetype = "dashed") + -->
+<!--   geom_heart(fill = "white", color = "black", alpha = 1) + -->
+<!--   geom_text(size = 3, nudge_y = -.05, aes(alpha = nchar(lyric) > 1 | lyric %in% letters[1:4] | lyric == "&" |lyric %in% LETTERS[1:4]), show.legend = F) + -->
+<!--   # coord_equal() +  -->
+<!--   # aes(fill = doremi, color = doremi) + -->
+<!--   ggstamp::theme_void_fill("white") + -->
+<!--   theme(text = element_text(color = "white")) +  -->
+<!--   theme(panel.spacing.x = unit(0, "in")) -->
 
-```
+
+<!-- ``` -->
 
 
 # geom_xmean on the fly with compute group...
@@ -596,75 +597,75 @@ data.frame(long =  c(0.596, 0.641, 0.695, 0.741, 0.788, 0.837,
 
 
 
-# in 100
+<!-- # in 100 -->
 
-```{r}
-tibble(outcome = sample(0:1, 1000, replace = T)) |>
-  count(outcome) |>
-  mutate(percent = round(100*n/sum(n))) |>
-  uncount(percent) |>
-  mutate(id = row_number()-1) |>
-  ggplot() + 
-  aes(x = id %% 10, y = id %/% 10) +
-  geom_tile() + 
-  aes(fill = outcome)
-
-
-compute_panel_100 <- function(data, scales){
-  
-  data  |>
-  count(outcome) |>
-  mutate(percent = round(100*n/sum(n))) |>
-  uncount(percent) |>
-  mutate(id = row_number()-1) |>
-  mutate(x = id %% 10) |>
-  mutate(y = id %/% 10) |>
-  mutate(width = .7, height = .7)
-  
-  
-}
-
-create_layer_temp(fun_name = "geom_100",
-                  compute_panel = compute_panel_100,
-                  required_aes = c("outcome"),
-                  geom_default = "tile")
+<!-- ```{r} -->
+<!-- tibble(outcome = sample(0:1, 1000, replace = T)) |> -->
+<!--   count(outcome) |> -->
+<!--   mutate(percent = round(100*n/sum(n))) |> -->
+<!--   uncount(percent) |> -->
+<!--   mutate(id = row_number()-1) |> -->
+<!--   ggplot() +  -->
+<!--   aes(x = id %% 10, y = id %/% 10) + -->
+<!--   geom_tile() +  -->
+<!--   aes(fill = outcome) -->
 
 
-Titanic %>% 
-  as.data.frame() %>% 
-  uncount(Freq) |>
-  ggplot() + 
-  aes(outcome = Survived) + 
-  geom_100() + 
-  geom_100(geom = "text", 
-           mapping = aes(label = after_stat(outcome)))
+<!-- compute_panel_100 <- function(data, scales){ -->
 
-last_plot() +
-  aes(fill = after_stat(outcome)) +
-  labs(fill = "Survived")
+<!--   data  |> -->
+<!--   count(outcome) |> -->
+<!--   mutate(percent = round(100*n/sum(n))) |> -->
+<!--   uncount(percent) |> -->
+<!--   mutate(id = row_number()-1) |> -->
+<!--   mutate(x = id %% 10) |> -->
+<!--   mutate(y = id %/% 10) |> -->
+<!--   mutate(width = .7, height = .7) -->
 
 
-last_plot() + 
-  facet_wrap(~Sex)
+<!-- } -->
 
-last_plot() + 
-  facet_grid(Sex ~ Age) 
-
-# fails, no propagation of alpha var...
-last_plot() + 
-  aes(alpha = Age)
-
-# Look at https://liamgilbey.github.io/ggwaffle/
+<!-- create_layer_temp(fun_name = "geom_100", -->
+<!--                   compute_panel = compute_panel_100, -->
+<!--                   required_aes = c("outcome"), -->
+<!--                   geom_default = "tile") -->
 
 
-```
+<!-- Titanic %>%  -->
+<!--   as.data.frame() %>%  -->
+<!--   uncount(Freq) |> -->
+<!--   ggplot() +  -->
+<!--   aes(outcome = Survived) +  -->
+<!--   geom_100() +  -->
+<!--   geom_100(geom = "text",  -->
+<!--            mapping = aes(label = after_stat(outcome))) -->
+
+<!-- last_plot() + -->
+<!--   aes(fill = after_stat(outcome)) + -->
+<!--   labs(fill = "Survived") -->
+
+
+<!-- last_plot() +  -->
+<!--   facet_wrap(~Sex) -->
+
+<!-- last_plot() +  -->
+<!--   facet_grid(Sex ~ Age)  -->
+
+<!-- # fails, no propagation of alpha var... -->
+<!-- last_plot() +  -->
+<!--   aes(alpha = Age) -->
+
+<!-- # Look at https://liamgilbey.github.io/ggwaffle/ -->
+
+
+<!-- ``` -->
 
 
 
-### some more things to try
+<!-- ### some more things to try -->
 
-- Diverging bar chart...
-- date input to month layout
+<!-- - Diverging bar chart... -->
+<!-- - date input to month layout -->
 
 
 # spatial 'status quo' of ggplot2 extension cookbook

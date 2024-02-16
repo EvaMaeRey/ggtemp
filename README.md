@@ -479,98 +479,119 @@ last_plot() +
 
 ![](README_files/figure-gfm/unnamed-chunk-9-4.png)<!-- -->
 
-### a cute musical example…
+<!-- ### a cute musical example... -->
 
-``` r
-twinkle_little_star_drm <- "ddsslls ffmmrrd"
-twinkle_lyrics <- "Twin-kle twin-kle lit-tle star
-How I won-der what you are"
+<!-- ```{r, fig.width=12, fig.height=7} -->
 
+<!-- twinkle_little_star_drm <- "ddsslls ffmmrrd" -->
 
-twinkle_little_star_drm |>
-ggdoremi:::join_phrases_drm_lyrics(twinkle_lyrics) |>
- ggplot() + 
-   aes(y = drm, x = id_in_phrase, r = .58, label = lyric) + 
-   facet_wrap(~id_phrase) + 
-  geom_star(alpha = .4) +
-  geom_text(size = 5) +
-  coord_equal() + 
-  aes(fill = doremi, color = doremi)
-#> Joining with `by = join_by(drm)`
-#> Joining with `by = join_by(id_phrase, id_in_phrase)`
-```
+<!-- twinkle_lyrics <- "Twin-kle twin-kle lit-tle star -->
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+<!-- How I won-der what you are" -->
 
-``` r
+<!-- twinkle_little_star_drm |> -->
 
-last_plot()$data |> head()
-#> # A tibble: 6 × 7
-#> # Groups:   id_phrase [1]
-#>   id_phrase id_in_phrase drm   doremi  freq lyric .group
-#>       <int>        <int> <fct> <fct>  <dbl> <chr>  <int>
-#> 1         1            1 d     do      440  Twin       1
-#> 2         1            2 d     do      440  kle        1
-#> 3         1            3 s     sol     660  twin       1
-#> 4         1            4 s     sol     660  kle        1
-#> 5         1            5 l     la      742. lit        1
-#> 6         1            6 l     la      742. tle        1
-```
+<!-- ggdoremi:::join_phrases_drm_lyrics(twinkle_lyrics) |> -->
 
-``` r
-compute_panel_heart <- function(data, scales){
+<!--  ggplot() +  -->
 
-  data %>%
-  mutate(group = row_number()) %>%
-  tidyr::crossing(around = 0:30/30) %>%
-    dplyr::mutate(
-      y = y + r*.8 * (
-        .85 * cos(2*pi*around)
-        - .3 * cos(2 * 2*pi*around)
-        - .2 * cos(3 * 2*pi*around)
-        - .05 * cos(4 * 2*pi*around)
-      ),
-      x = x + r * (sin(2*pi*around)^3))
+<!--    aes(y = drm, x = id_in_phrase, r = .58, label = lyric) +  -->
 
-}
+<!--    facet_wrap(~id_phrase) +  -->
 
+<!--   geom_star(alpha = .4) + -->
 
-create_layer_temp(fun_name = "geom_heart", 
-                  compute_panel = compute_panel_heart,
-                  required_aes = c("x", "y", "r"),
-                  geom_default ="polygon")
+<!--   geom_text(size = 5) + -->
 
-alphabet_drm <- "ddsslls ffmmrrrrd ssfmmr sfmmr ddsslls ffmmrrd"
-alphabet_lyrics <- 
-"A B C D E F G
-H I J K L M N O P
-Q R S T U V
-W X Y & Z
-Val-en-tine's Day A B C's
-A few hearts for you from me!"
+<!--   coord_equal() +  -->
 
+<!--   aes(fill = doremi, color = doremi) -->
 
+<!-- last_plot()$data |> head() -->
 
-alphabet_drm |>
-  ggdoremi:::join_phrases_drm_lyrics(alphabet_lyrics) |>
- ggplot() + 
-   aes(y = as.numeric(drm), x = id_in_phrase, r = .58, label = lyric) + 
-   facet_wrap(~id_phrase, scales = "free_x") + 
-  geom_hline(yintercept = c(8,10,12), color = "grey") + 
-  geom_line(color = "black", linetype = "dashed") +
-  geom_heart(fill = "white", color = "black", alpha = 1) +
-  geom_text(size = 3, nudge_y = -.05, aes(alpha = nchar(lyric) > 1 | lyric %in% letters[1:4] | lyric == "&" |lyric %in% LETTERS[1:4]), show.legend = F) +
-  # coord_equal() + 
-  # aes(fill = doremi, color = doremi) +
-  ggstamp::theme_void_fill("white") +
-  theme(text = element_text(color = "white")) + 
-  theme(panel.spacing.x = unit(0, "in"))
-#> Joining with `by = join_by(drm)`
-#> Joining with `by = join_by(id_phrase, id_in_phrase)`
-#> Warning: Using alpha for a discrete variable is not advised.
-```
+<!-- ``` -->
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+<!-- ```{r, fig.width=11, fig.height=6.5} -->
+
+<!-- compute_panel_heart <- function(data, scales){ -->
+
+<!--   data %>% -->
+
+<!--   mutate(group = row_number()) %>% -->
+
+<!--   tidyr::crossing(around = 0:30/30) %>% -->
+
+<!--     dplyr::mutate( -->
+
+<!--       y = y + r*.8 * ( -->
+
+<!--         .85 * cos(2*pi*around) -->
+
+<!--         - .3 * cos(2 * 2*pi*around) -->
+
+<!--         - .2 * cos(3 * 2*pi*around) -->
+
+<!--         - .05 * cos(4 * 2*pi*around) -->
+
+<!--       ), -->
+
+<!--       x = x + r * (sin(2*pi*around)^3)) -->
+
+<!-- } -->
+
+<!-- create_layer_temp(fun_name = "geom_heart",  -->
+
+<!--                   compute_panel = compute_panel_heart, -->
+
+<!--                   required_aes = c("x", "y", "r"), -->
+
+<!--                   geom_default ="polygon") -->
+
+<!-- alphabet_drm <- "ddsslls ffmmrrrrd ssfmmr sfmmr ddsslls ffmmrrd" -->
+
+<!-- alphabet_lyrics <-  -->
+
+<!-- "A B C D E F G -->
+
+<!-- H I J K L M N O P -->
+
+<!-- Q R S T U V -->
+
+<!-- W X Y & Z -->
+
+<!-- Val-en-tine's Day A B C's -->
+
+<!-- A few hearts for you from me!" -->
+
+<!-- alphabet_drm |> -->
+
+<!--   ggdoremi:::join_phrases_drm_lyrics(alphabet_lyrics) |> -->
+
+<!--  ggplot() +  -->
+
+<!--    aes(y = as.numeric(drm), x = id_in_phrase, r = .58, label = lyric) +  -->
+
+<!--    facet_wrap(~id_phrase, scales = "free_x") +  -->
+
+<!--   geom_hline(yintercept = c(8,10,12), color = "grey") +  -->
+
+<!--   geom_line(color = "black", linetype = "dashed") + -->
+
+<!--   geom_heart(fill = "white", color = "black", alpha = 1) + -->
+
+<!--   geom_text(size = 3, nudge_y = -.05, aes(alpha = nchar(lyric) > 1 | lyric %in% letters[1:4] | lyric == "&" |lyric %in% LETTERS[1:4]), show.legend = F) + -->
+
+<!--   # coord_equal() +  -->
+
+<!--   # aes(fill = doremi, color = doremi) + -->
+
+<!--   ggstamp::theme_void_fill("white") + -->
+
+<!--   theme(text = element_text(color = "white")) +  -->
+
+<!--   theme(panel.spacing.x = unit(0, "in")) -->
+
+<!-- ``` -->
 
 # geom\_xmean on the fly with compute group…
 
@@ -599,7 +620,7 @@ ggplot(cars) +
   aes(color = speed > 18)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ## compute\_oval\_minmax
 
@@ -651,7 +672,7 @@ ggplot(mtcars) +
   geom_oval_xy_range()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 ``` r
 
@@ -659,7 +680,7 @@ last_plot() +
    aes(color = wt > 3.4)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
 
 <!-- # Dates extension example - geom progression -->
 
@@ -702,7 +723,7 @@ tibble::tribble(~event, ~date,
 #> (`geom_segment()`).
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ``` r
 
@@ -723,104 +744,103 @@ data.frame(long =  c(0.596, 0.641, 0.695, 0.741, 0.788, 0.837,
 #> (`geom_segment()`).
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
 
-# in 100
+<!-- # in 100 -->
 
-``` r
-tibble(outcome = sample(0:1, 1000, replace = T)) |>
-  count(outcome) |>
-  mutate(percent = round(100*n/sum(n))) |>
-  uncount(percent) |>
-  mutate(id = row_number()-1) |>
-  ggplot() + 
-  aes(x = id %% 10, y = id %/% 10) +
-  geom_tile() + 
-  aes(fill = outcome)
-```
+<!-- ```{r} -->
 
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+<!-- tibble(outcome = sample(0:1, 1000, replace = T)) |> -->
 
-``` r
+<!--   count(outcome) |> -->
 
+<!--   mutate(percent = round(100*n/sum(n))) |> -->
 
-compute_panel_100 <- function(data, scales){
-  
-  data  |>
-  count(outcome) |>
-  mutate(percent = round(100*n/sum(n))) |>
-  uncount(percent) |>
-  mutate(id = row_number()-1) |>
-  mutate(x = id %% 10) |>
-  mutate(y = id %/% 10) |>
-  mutate(width = .7, height = .7)
-  
-  
-}
+<!--   uncount(percent) |> -->
 
-create_layer_temp(fun_name = "geom_100",
-                  compute_panel = compute_panel_100,
-                  required_aes = c("outcome"),
-                  geom_default = "tile")
+<!--   mutate(id = row_number()-1) |> -->
 
+<!--   ggplot() +  -->
 
-Titanic %>% 
-  as.data.frame() %>% 
-  uncount(Freq) |>
-  ggplot() + 
-  aes(outcome = Survived) + 
-  geom_100() + 
-  geom_100(geom = "text", 
-           mapping = aes(label = after_stat(outcome)))
-```
+<!--   aes(x = id %% 10, y = id %/% 10) + -->
 
-![](README_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
+<!--   geom_tile() +  -->
 
-``` r
+<!--   aes(fill = outcome) -->
 
-last_plot() +
-  aes(fill = after_stat(outcome)) +
-  labs(fill = "Survived")
-```
+<!-- compute_panel_100 <- function(data, scales){ -->
 
-![](README_files/figure-gfm/unnamed-chunk-15-3.png)<!-- -->
+<!--   data  |> -->
 
-``` r
+<!--   count(outcome) |> -->
 
+<!--   mutate(percent = round(100*n/sum(n))) |> -->
 
-last_plot() + 
-  facet_wrap(~Sex)
-```
+<!--   uncount(percent) |> -->
 
-![](README_files/figure-gfm/unnamed-chunk-15-4.png)<!-- -->
+<!--   mutate(id = row_number()-1) |> -->
 
-``` r
+<!--   mutate(x = id %% 10) |> -->
 
-last_plot() + 
-  facet_grid(Sex ~ Age) 
-```
+<!--   mutate(y = id %/% 10) |> -->
 
-![](README_files/figure-gfm/unnamed-chunk-15-5.png)<!-- -->
+<!--   mutate(width = .7, height = .7) -->
 
-``` r
+<!-- } -->
 
-# fails, no propagation of alpha var...
-last_plot() + 
-  aes(alpha = Age)
-#> Warning: Using alpha for a discrete variable is not advised.
-```
+<!-- create_layer_temp(fun_name = "geom_100", -->
 
-![](README_files/figure-gfm/unnamed-chunk-15-6.png)<!-- -->
+<!--                   compute_panel = compute_panel_100, -->
 
-``` r
+<!--                   required_aes = c("outcome"), -->
 
-# Look at https://liamgilbey.github.io/ggwaffle/
-```
+<!--                   geom_default = "tile") -->
 
-### some more things to try
+<!-- Titanic %>%  -->
 
-  - Diverging bar chart…
-  - date input to month layout
+<!--   as.data.frame() %>%  -->
+
+<!--   uncount(Freq) |> -->
+
+<!--   ggplot() +  -->
+
+<!--   aes(outcome = Survived) +  -->
+
+<!--   geom_100() +  -->
+
+<!--   geom_100(geom = "text",  -->
+
+<!--            mapping = aes(label = after_stat(outcome))) -->
+
+<!-- last_plot() + -->
+
+<!--   aes(fill = after_stat(outcome)) + -->
+
+<!--   labs(fill = "Survived") -->
+
+<!-- last_plot() +  -->
+
+<!--   facet_wrap(~Sex) -->
+
+<!-- last_plot() +  -->
+
+<!--   facet_grid(Sex ~ Age)  -->
+
+<!-- # fails, no propagation of alpha var... -->
+
+<!-- last_plot() +  -->
+
+<!--   aes(alpha = Age) -->
+
+<!-- # Look at https://liamgilbey.github.io/ggwaffle/ -->
+
+<!-- ``` -->
+
+<!-- ### some more things to try -->
+
+<!-- - Diverging bar chart... -->
+
+<!-- - date input to month layout -->
 
 # spatial ‘status quo’ of ggplot2 extension cookbook
 
@@ -936,7 +956,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 # define\_layer\_sf\_temp build
 
@@ -1102,7 +1122,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
   
@@ -1112,7 +1132,7 @@ last_plot() +
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
 
 ``` r
 
@@ -1127,7 +1147,7 @@ last_plot() +
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-3.png)<!-- -->
 
 ``` r
 create_layer_sf_temp <- function(ref_df, 
@@ -1190,7 +1210,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
 
@@ -1210,7 +1230,7 @@ ggnorthcarolina::northcarolina_county_flat |>
 #> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
 
 ``` r
 library(tmap)
@@ -1258,7 +1278,7 @@ NLD_prov |>
 #> Joining with `by = join_by(prov_code)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
 
@@ -1285,7 +1305,7 @@ NLD_muni |>
 #> Joining with `by = join_by(muni_code)`Joining with `by = join_by(muni_code)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->
 
 <!-- # for brain example, stamp? -->
 
@@ -1376,7 +1396,7 @@ gapminder::gapminder |>
 #> Joining with `by = join_by(country_name)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ``` r
 
@@ -1414,7 +1434,7 @@ heritage |>
 #> Joining with `by = join_by(country_name)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
 
 # Part II. Packaging and documentation 🚧 ✅
 
@@ -1498,7 +1518,7 @@ ggplot(cars) +
   geom_circle_points()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
   - Bit H. Chosen a license? 🚧 ✅
 
