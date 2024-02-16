@@ -27,7 +27,7 @@ define_layer_sf_temp <- function(ref_df,
                                  geom_default = ggplot2::GeomSf, 
                                  required_aes, 
                                  default_aes = ggplot2::aes(),
-                                 compute_panel = NULL, 
+                                 stamp = FALSE,
                                  mapping = NULL,
                                  data = NULL,
                                  position = "identity",
@@ -47,17 +47,37 @@ ref_df_w_bb_and_xy_centers <-
   data.frame() |>
   add_xy_coords()
 
-compute_panel_county <- function(data, scales){
+  ref_df_w_bb_and_xy_centers$id_col <- ref_df_w_bb_and_xy_centers[,1]
+
+
+
+compute_panel_geo <- function(data, scales, keep = NULL, drop = c()){
   
-  data |> 
-    dplyr::inner_join(ref_df_w_bb_and_xy_centers)
+  if(!stamp){
+  
+  out <- data |> 
+    dplyr::inner_join(ref_df_w_bb_and_xy_centers) |>
+    filter(!(id_col %in% drop))
+
+  
+  }
+  
+  if(stamp){
+  
+  out <- ref_df_w_bb_and_xy_centers |>
+    filter(!(id_col %in% drop))
+    
+  }
+  
+  out
   
 }
+
 
 StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
                                 `_inherit` = ggplot2::Stat,
                                 required_aes = required_aes,
-                                compute_panel = compute_panel_county,
+                                compute_panel = compute_panel_geo,
                                default_aes = default_aes)
 
   if(is.null(geom)){geom <- geom_default}

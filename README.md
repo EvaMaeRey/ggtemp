@@ -3,14 +3,16 @@ Proposing the {ggtemp} package\! 🦄
 <!-- (typical package introduction write up; but actually aspirational) -->
 
 The goal of {ggtemp} is to make writing some quick useful extension
-functions succinct. Right now, the amount of code required to write
-extensions is a bit of a mouthful, and could feel prohibitive for
-day-to-day analysis. Specifically, defining new geom\_\* and stat\_\*
-layers outside of the context of a package, I believe, is not common,
-but could be quite useful, ultimately making plot builds intiuitive,
-fun, and readable. However the usual amount of code required to make
-define new geom\_\* or stat\_\* functions, might feel like it ‘gunks up’
-your script.
+functions succinct.
+
+Right now, the amount of code required to write extensions is a bit of a
+mouthful, and could feel prohibitive for day-to-day analysis.
+Specifically, defining new geom\_\* and stat\_\* layers outside of the
+context of a package, I believe, is not common, but could be quite
+useful, ultimately making plot builds intiuitive and fun, and code more
+readable. However the usual amount of code required to make define new
+geom\_\* or stat\_\* functions, might feel like it ‘gunks up’ your
+script currently.
 
 With the {ggtemp} package, we’ll live in a different world (🦄 🦄 🦄) where
 the task is a snap 🫰, and the readability of the in-script definition of
@@ -34,7 +36,7 @@ Proposed API where we create a new geom\_\* layer function
     create_layer_temp(fun_name = "geom_xmean",
                       compute_group = compute_group_xmean,
                       required_aes = "x",
-                      geom = "segment")
+                      geom_defaut = "segment")
                       
                       
     # 3. Use temp layer!                   
@@ -116,15 +118,10 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
 
 ![](README_files/figure-gfm/cars-1.png)<!-- -->
 
-## Experimental: `define_layer_temp()` combines 2 and 3 in using a temp stat
+## Experimental: `define_layer_temp()` combines 2 and 3 in using a temp Stat under the hood
 
 ``` r
 define_layer_temp <- function(
-  # finish_layer = 
-  # retransform
-  # extra_params =
-  # setup_params
-  # parameters
   default_aes = ggplot2::aes(),
   required_aes = character(),
   dropped_aes = character(), 
@@ -133,6 +130,11 @@ define_layer_temp <- function(
   compute_group = NULL,
   compute_panel = NULL, 
   compute_layer = NULL,
+  # finish_layer = # we'll work on making these stat ggproto slots accessible too
+  # retransform
+  # extra_params =
+  # setup_params
+  # parameters
   geom = NULL,
   geom_default = ggplot2::GeomPoint, 
   mapping = NULL,
@@ -141,14 +143,13 @@ define_layer_temp <- function(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE, 
+  
   ...) {
 
-  
 StatTemp <- ggproto(
   `_class` = "StatTemp",
   `_inherit` = ggplot2::Stat,
-  # compute_group = compute_group,
-  # compute_panel = compute_panel,
+  default_aes = default_aes,
   required_aes = required_aes)
 
 if(!is.null(compute_group)){StatTemp$compute_group <- compute_group}
@@ -158,8 +159,8 @@ if(!is.null(compute_layer)){StatTemp$compute_layer <- compute_layer}
   if(is.null(geom)){geom <- geom_default}
 
   ggplot2::layer(
-    stat = StatTemp,  # proto object from Step 2
-    geom = geom,  # inherit other behavior
+    stat = StatTemp, 
+    geom = geom, 
     data = data,
     mapping = mapping,
     position = position,
@@ -291,16 +292,18 @@ assign(x = "geom_circle",
 
 ``` r
 create_layer_temp <- function(fun_name ="geom_circle", 
-                                    compute_panel = NULL,
-                                    compute_group = NULL,
-                                    required_aes = c("x0", "y0", "r"),
-                                    geom_default ="point", ...){
+                              compute_panel = NULL,
+                              compute_group = NULL,
+                              required_aes = character(),
+                              default_aes = aes(),
+                              geom_default ="point", ...){
 
   assign(x = fun_name, 
          value = function(...){
            
   define_layer_temp(
     required_aes = required_aes,
+    default_aes = default_aes, 
     compute_panel = compute_panel,
     compute_group = compute_group,
     geom_default = geom_default,
@@ -371,7 +374,112 @@ last_plot() +
 
 ![](README_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
 
-### a real-world example… :-)
+### A point with no required aes
+
+``` r
+compute_group_point <- function(data, scales){
+  
+  if(is.null(data$y)){data$y <- 0}
+  if(is.null(data$x)){data$x <- 0}
+  
+  data 
+  
+} 
+
+cars |>
+ select(x = speed, y = dist) |>
+  compute_group_point()
+#>     x   y
+#> 1   4   2
+#> 2   4  10
+#> 3   7   4
+#> 4   7  22
+#> 5   8  16
+#> 6   9  10
+#> 7  10  18
+#> 8  10  26
+#> 9  10  34
+#> 10 11  17
+#> 11 11  28
+#> 12 12  14
+#> 13 12  20
+#> 14 12  24
+#> 15 12  28
+#> 16 13  26
+#> 17 13  34
+#> 18 13  34
+#> 19 13  46
+#> 20 14  26
+#> 21 14  36
+#> 22 14  60
+#> 23 14  80
+#> 24 15  20
+#> 25 15  26
+#> 26 15  54
+#> 27 16  32
+#> 28 16  40
+#> 29 17  32
+#> 30 17  40
+#> 31 17  50
+#> 32 18  42
+#> 33 18  56
+#> 34 18  76
+#> 35 18  84
+#> 36 19  36
+#> 37 19  46
+#> 38 19  68
+#> 39 20  32
+#> 40 20  48
+#> 41 20  52
+#> 42 20  56
+#> 43 20  64
+#> 44 22  66
+#> 45 23  54
+#> 46 24  70
+#> 47 24  92
+#> 48 24  93
+#> 49 24 120
+#> 50 25  85
+
+
+create_layer_temp(fun_name = "geom_point2",
+                           compute_group = compute_group_point,
+                           required_aes = character(),
+                           default_aes = aes(x = NULL, y = NULL),
+                           geom_default = "point")
+
+
+ggplot(cars) + 
+  geom_point2(alpha = .7)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+
+last_plot() +
+  aes(x = speed) 
+```
+
+![](README_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+
+``` r
+
+last_plot() + 
+  aes(y = dist)
+```
+
+![](README_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
+
+``` r
+
+last_plot() + 
+  aes(x = "all")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-9-4.png)<!-- -->
+
+### a cute musical example…
 
 ``` r
 twinkle_little_star_drm <- "ddsslls ffmmrrd"
@@ -392,7 +500,7 @@ ggdoremi:::join_phrases_drm_lyrics(twinkle_lyrics) |>
 #> Joining with `by = join_by(id_phrase, id_in_phrase)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
 
@@ -418,8 +526,8 @@ compute_panel_heart <- function(data, scales){
     dplyr::mutate(
       y = y + r*.8 * (
         .85 * cos(2*pi*around)
-        - .35 * cos(2 * 2*pi*around)
-        - .25 * cos(3 * 2*pi*around)
+        - .3 * cos(2 * 2*pi*around)
+        - .2 * cos(3 * 2*pi*around)
         - .05 * cos(4 * 2*pi*around)
       ),
       x = x + r * (sin(2*pi*around)^3))
@@ -434,12 +542,12 @@ create_layer_temp(fun_name = "geom_heart",
 
 alphabet_drm <- "ddsslls ffmmrrrrd ssfmmr sfmmr ddsslls ffmmrrd"
 alphabet_lyrics <- 
-"a b c d e f g
-h i j k l m n o p
-q r s t u v
-w x y & z
-val-en-tines day a b c's
-hope its sweet as it can be"
+"A B C D E F G
+H I J K L M N O P
+Q R S T U V
+W X Y & Z
+Val-en-tine's Day A B C's
+A few hearts for you from me!"
 
 
 
@@ -450,8 +558,8 @@ alphabet_drm |>
    facet_wrap(~id_phrase, scales = "free_x") + 
   geom_hline(yintercept = c(8,10,12), color = "grey") + 
   geom_line(color = "black", linetype = "dashed") +
-  geom_heart(fill = "white", color = "black") +
-  geom_text(size = 5, alpha = 0 ) +
+  geom_heart(fill = "white", color = "black", alpha = 1) +
+  geom_text(size = 3, nudge_y = -.05, aes(alpha = nchar(lyric) > 1 | lyric %in% letters[1:4] | lyric == "&" |lyric %in% LETTERS[1:4]), show.legend = F) +
   # coord_equal() + 
   # aes(fill = doremi, color = doremi) +
   ggstamp::theme_void_fill("white") +
@@ -459,9 +567,10 @@ alphabet_drm |>
   theme(panel.spacing.x = unit(0, "in"))
 #> Joining with `by = join_by(drm)`
 #> Joining with `by = join_by(id_phrase, id_in_phrase)`
+#> Warning: Using alpha for a discrete variable is not advised.
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 # geom\_xmean on the fly with compute group…
 
@@ -490,7 +599,7 @@ ggplot(cars) +
   aes(color = speed > 18)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ## compute\_oval\_minmax
 
@@ -542,7 +651,7 @@ ggplot(mtcars) +
   geom_oval_xy_range()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ``` r
 
@@ -550,9 +659,9 @@ last_plot() +
    aes(color = wt > 3.4)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
 
-# Dates extension example - geom progression
+<!-- # Dates extension example - geom progression -->
 
 ``` r
 
@@ -560,16 +669,24 @@ last_plot() +
 compute_group_progression <- function(data, scales){
   
   data |>
-    mutate(xend = lag(x)) |>
-    mutate(yend = lag(y)) 
+    mutate(xend = lead(x)) |>
+    mutate(yend = lead(y)) 
   
 }
 
 
-create_layer_temp(fun_name = "geom_progression",
+create_layer_temp(fun_name = "stat_progression",
                   compute_group = compute_group_progression,
                   required_aes = c("x","y"),
                   geom_default = "segment")
+
+
+geom_progression <- function(...){
+  
+  stat_progression(arrow = arrow(ends = "last", length = unit(.1, "in")),...)
+  
+}
+
 
 
 tibble::tribble(~event, ~date,
@@ -578,14 +695,35 @@ tibble::tribble(~event, ~date,
                 "extended\ndeadline", 5) |>
   ggplot() + 
   aes(x = date, y = "Conf") + 
-  geom_progression(arrow = arrow(ends = "first")) + 
+  geom_progression() + 
   geom_point() +
   geom_text(aes(label = event), vjust = 0)
 #> Warning: Removed 1 row containing missing values or values outside the scale range
 #> (`geom_segment()`).
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+``` r
+
+
+
+# And w/ stackoverflow example.
+# https://stackoverflow.com/questions/70249589/how-to-add-multiple-arrows-to-a-path-according-to-line-direction-using-ggplot2
+data.frame(long =  c(0.596, 0.641, 0.695, 0.741, 0.788, 0.837,
+       0.887, 0.937, 0.993, 0.984, 0.934, 0.886,
+       0.838, 0.778, 0.738, 0.681, 0.642, 0.593),
+       lat = c(23.630, 24.085, 24.643, 25.067, 25.491, 25.899,
+       26.305, 26.670, 27.049, 27.025, 26.836, 26.636,
+       26.429, 26.152, 25.965, 25.664, 25.442, 24.510)) %>% 
+  ggplot() + 
+  aes(x = long, y = lat) + 
+  geom_progression()
+#> Warning: Removed 1 row containing missing values or values outside the scale range
+#> (`geom_segment()`).
+```
+
+![](README_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
 
 # in 100
 
@@ -601,7 +739,7 @@ tibble(outcome = sample(0:1, 1000, replace = T)) |>
   aes(fill = outcome)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
 
@@ -636,7 +774,7 @@ Titanic %>%
            mapping = aes(label = after_stat(outcome)))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
 
 ``` r
 
@@ -645,7 +783,7 @@ last_plot() +
   labs(fill = "Survived")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-3.png)<!-- -->
 
 ``` r
 
@@ -654,7 +792,7 @@ last_plot() +
   facet_wrap(~Sex)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-4.png)<!-- -->
 
 ``` r
 
@@ -662,7 +800,7 @@ last_plot() +
   facet_grid(Sex ~ Age) 
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-5.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-5.png)<!-- -->
 
 ``` r
 
@@ -672,40 +810,17 @@ last_plot() +
 #> Warning: Using alpha for a discrete variable is not advised.
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-6.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-6.png)<!-- -->
 
 ``` r
 
 # Look at https://liamgilbey.github.io/ggwaffle/
 ```
 
-# ggproto manipulation
+### some more things to try
 
-``` r
-StatCircle <- ggplot2::ggproto(
-  `_class` = "StatCircle",
-  `_inherit` = ggplot2::Stat,
-  compute_group = function(data, scales){},
-  required_aes = c("x0", "y0", "r"))
-
-length(StatCircle)
-#> [1] 3
-
-StatCircle2 <- ggplot2::ggproto(
-  `_class` = "StatCircle",
-  `_inherit` = ggplot2::Stat,
-  compute_group = StatCircle$compute_group,
-  required_aes = c("x0", "y0", "r"))
-
-waldo::compare(StatCircle, StatCircle2)
-#> `old$compute_group` is a function
-#> `new$compute_group` is an S3 object of class <ggproto_method>, a function
-#> 
-#> `environment(old$super)$members$compute_group` is a function
-#> `environment(new$super)$members$compute_group` is an S3 object of class <ggproto_method>, a function
-```
-
-## Diverging bar chart…
+  - Diverging bar chart…
+  - date input to month layout
 
 # spatial ‘status quo’ of ggplot2 extension cookbook
 
@@ -871,7 +986,7 @@ define_layer_sf_temp <- function(ref_df,
                                  geom_default = ggplot2::GeomSf, 
                                  required_aes, 
                                  default_aes = ggplot2::aes(),
-                                 compute_panel = NULL, 
+                                 stamp = FALSE,
                                  mapping = NULL,
                                  data = NULL,
                                  position = "identity",
@@ -891,17 +1006,37 @@ ref_df_w_bb_and_xy_centers <-
   data.frame() |>
   add_xy_coords()
 
-compute_panel_county <- function(data, scales){
+  ref_df_w_bb_and_xy_centers$id_col <- ref_df_w_bb_and_xy_centers[,1]
+
+
+
+compute_panel_geo <- function(data, scales, keep = NULL, drop = c()){
   
-  data |> 
-    dplyr::inner_join(ref_df_w_bb_and_xy_centers)
+  if(!stamp){
+  
+  out <- data |> 
+    dplyr::inner_join(ref_df_w_bb_and_xy_centers) |>
+    filter(!(id_col %in% drop))
+
+  
+  }
+  
+  if(stamp){
+  
+  out <- ref_df_w_bb_and_xy_centers |>
+    filter(!(id_col %in% drop))
+    
+  }
+  
+  out
   
 }
+
 
 StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
                                 `_inherit` = ggplot2::Stat,
                                 required_aes = required_aes,
-                                compute_panel = compute_panel_county,
+                                compute_panel = compute_panel_geo,
                                default_aes = default_aes)
 
   if(is.null(geom)){geom <- geom_default}
@@ -984,7 +1119,7 @@ last_plot() +
 
 last_plot() +
   geom_county2(geom = "text", 
-              mapping = aes(label = BIR74))  #oh no!
+              mapping = aes(label = BIR74))  #oh! 
 #> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
 #> st_point_on_surface may not give correct results for longitude/latitude data
 #> Joining with `by = join_by(fips)`
@@ -1135,17 +1270,80 @@ NLD_muni |>
   geom_nl_muni() + 
   geom_nl_muni(geom = "text", 
                data = . %>% filter(population > 100000 ),
-               check_overlap = T) + 
+               check_overlap = T,
+               color = "gray80",
+               face = "bold") + 
   aes(fill = pop_15_24) + 
-  scale_fill_viridis_c()
+  scale_fill_viridis_c() + 
+  ggstamp::theme_void_fill("grey")
 #> old-style crs object detected; please recreate object with a recent sf::st_crs()
 #> old-style crs object detected; please recreate object with a recent sf::st_crs()
 #> old-style crs object detected; please recreate object with a recent sf::st_crs()
+#> Warning in ggplot2::layer_sf(stat = StatTempsf, geom = geom, data = data, :
+#> Ignoring unknown parameters: `face`
 #> old-style crs object detected; please recreate object with a recent sf::st_crs()
 #> Joining with `by = join_by(muni_code)`Joining with `by = join_by(muni_code)`
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-20-2.png)<!-- -->
+
+<!-- # for brain example, stamp? -->
+
+<!-- ```{r} -->
+
+<!-- library(ggplot2) -->
+
+<!-- ggseg::aseg$data |> -->
+
+<!--   dplyr::filter(!is.na(label)) %>%  -->
+
+<!--   rename(seg_id = label) -> -->
+
+<!-- id_and_boundaries -->
+
+<!-- ggseg::aseg$data |> -->
+
+<!--   dplyr::filter(!is.na(label)) |> -->
+
+<!--   sf::st_drop_geometry() -> -->
+
+<!-- regions_flat -->
+
+<!-- # th -->
+
+<!-- id_and_boundaries |> -->
+
+<!--    dplyr::left_join(regions_flat) |> -->
+
+<!--    ggplot() + -->
+
+<!--    geom_sf() +  -->
+
+<!--    aes(fill = hemi) -->
+
+<!-- create_layer_sf_temp(id_and_boundaries,  -->
+
+<!--                      fun_name = "stamp_brain", -->
+
+<!--                      default_aes = aes(label = after_stat(region)), -->
+
+<!--                      required_aes = character() -->
+
+<!--                      ) -->
+
+<!-- library(ggplot2) -->
+
+<!-- regions_flat %>% -->
+
+<!--   ggplot() + -->
+
+<!--   aes(seg_id = seg_id,  -->
+
+<!--       fill = region == "amygdala") + -->
+
+<!--   geom_brain()  -->
+
+<!-- ``` -->
 
 ``` r
 rnaturalearth::ne_countries(  

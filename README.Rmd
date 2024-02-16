@@ -18,7 +18,9 @@ knitr::opts_chunk$set(
 Proposing the {ggtemp} package! 🦄 
 <!-- (typical package introduction write up; but actually aspirational) -->
 
-The goal of {ggtemp} is to make writing some quick useful extension functions succinct. Right now, the amount of code required to write extensions is a bit of a mouthful, and could feel prohibitive for day-to-day analysis.  Specifically, defining new geom_* and stat_* layers outside of the context of a package, I believe, is not common, but could be quite useful, ultimately making plot builds intiuitive, fun, and readable. However the usual amount of code required to make define new geom_* or stat_* functions, might feel like it 'gunks up' your script.
+The goal of {ggtemp} is to make writing some quick useful extension functions succinct. 
+
+Right now, the amount of code required to write extensions is a bit of a mouthful, and could feel prohibitive for day-to-day analysis.  Specifically, defining new geom_* and stat_* layers outside of the context of a package, I believe, is not common, but could be quite useful, ultimately making plot builds intiuitive and fun, and code more readable. However the usual amount of code required to make define new geom_* or stat_* functions, might feel like it 'gunks up' your script currently.
 
 With the {ggtemp} package, we'll live in a different world (🦄 🦄 🦄) where the task is a snap 🫰, and the readability of the in-script definition of a geom_* or stat_* function is quite succinct: 
 
@@ -41,7 +43,7 @@ compute_group_xmean <- function(data, scales){
 create_layer_temp(fun_name = "geom_xmean",
                   compute_group = compute_group_xmean,
                   required_aes = "x",
-                  geom = "segment")
+                  geom_defaut = "segment")
                   
                   
 # 3. Use temp layer!                   
@@ -109,16 +111,11 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
   aes(fill = r)
 ```
 
-## Experimental:  `define_layer_temp()` combines 2 and 3 in using a temp stat
+## Experimental:  `define_layer_temp()` combines 2 and 3 in using a temp Stat under the hood
 
 
 ```{r define_layer_temp}
 define_layer_temp <- function(
-  # finish_layer = 
-  # retransform
-  # extra_params =
-  # setup_params
-  # parameters
   default_aes = ggplot2::aes(),
   required_aes = character(),
   dropped_aes = character(), 
@@ -127,6 +124,11 @@ define_layer_temp <- function(
   compute_group = NULL,
   compute_panel = NULL, 
   compute_layer = NULL,
+  # finish_layer = # we'll work on making these stat ggproto slots accessible too
+  # retransform
+  # extra_params =
+  # setup_params
+  # parameters
   geom = NULL,
   geom_default = ggplot2::GeomPoint, 
   mapping = NULL,
@@ -135,14 +137,13 @@ define_layer_temp <- function(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE, 
+  
   ...) {
 
-  
 StatTemp <- ggproto(
   `_class` = "StatTemp",
   `_inherit` = ggplot2::Stat,
-  # compute_group = compute_group,
-  # compute_panel = compute_panel,
+  default_aes = default_aes,
   required_aes = required_aes)
 
 if(!is.null(compute_group)){StatTemp$compute_group <- compute_group}
@@ -152,8 +153,8 @@ if(!is.null(compute_layer)){StatTemp$compute_layer <- compute_layer}
   if(is.null(geom)){geom <- geom_default}
 
   ggplot2::layer(
-    stat = StatTemp,  # proto object from Step 2
-    geom = geom,  # inherit other behavior
+    stat = StatTemp, 
+    geom = geom, 
     data = data,
     mapping = mapping,
     position = position,
@@ -283,16 +284,18 @@ assign(x = "geom_circle",
 
 ```{r create_layer_temp}
 create_layer_temp <- function(fun_name ="geom_circle", 
-                                    compute_panel = NULL,
-                                    compute_group = NULL,
-                                    required_aes = c("x0", "y0", "r"),
-                                    geom_default ="point", ...){
+                              compute_panel = NULL,
+                              compute_group = NULL,
+                              required_aes = character(),
+                              default_aes = aes(),
+                              geom_default ="point", ...){
 
   assign(x = fun_name, 
          value = function(...){
            
   define_layer_temp(
     required_aes = required_aes,
+    default_aes = default_aes, 
     compute_panel = compute_panel,
     compute_group = compute_group,
     geom_default = geom_default,
@@ -354,7 +357,46 @@ last_plot() +
   geom_star(geom = "point", color = "magenta")
 ```
 
-### a real-world example... :-)
+### A point with no required aes
+
+```{r}
+compute_group_point <- function(data, scales){
+  
+  if(is.null(data$y)){data$y <- 0}
+  if(is.null(data$x)){data$x <- 0}
+  
+  data 
+  
+} 
+
+cars |>
+ select(x = speed, y = dist) |>
+  compute_group_point()
+
+
+create_layer_temp(fun_name = "geom_point2",
+                           compute_group = compute_group_point,
+                           required_aes = character(),
+                           default_aes = aes(x = NULL, y = NULL),
+                           geom_default = "point")
+
+
+ggplot(cars) + 
+  geom_point2(alpha = .7)
+
+last_plot() +
+  aes(x = speed) 
+
+last_plot() + 
+  aes(y = dist)
+
+last_plot() + 
+  aes(x = "all")
+
+```
+
+
+### a cute musical example...
 
 ```{r, fig.width=12, fig.height=7}
 twinkle_little_star_drm <- "ddsslls ffmmrrd"
@@ -385,8 +427,8 @@ compute_panel_heart <- function(data, scales){
     dplyr::mutate(
       y = y + r*.8 * (
         .85 * cos(2*pi*around)
-        - .35 * cos(2 * 2*pi*around)
-        - .25 * cos(3 * 2*pi*around)
+        - .3 * cos(2 * 2*pi*around)
+        - .2 * cos(3 * 2*pi*around)
         - .05 * cos(4 * 2*pi*around)
       ),
       x = x + r * (sin(2*pi*around)^3))
@@ -401,12 +443,12 @@ create_layer_temp(fun_name = "geom_heart",
 
 alphabet_drm <- "ddsslls ffmmrrrrd ssfmmr sfmmr ddsslls ffmmrrd"
 alphabet_lyrics <- 
-"a b c d e f g
-h i j k l m n o p
-q r s t u v
-w x y & z
-val-en-tines day a b c's
-hope its sweet as it can be"
+"A B C D E F G
+H I J K L M N O P
+Q R S T U V
+W X Y & Z
+Val-en-tine's Day A B C's
+A few hearts for you from me!"
 
 
 
@@ -417,8 +459,8 @@ alphabet_drm |>
    facet_wrap(~id_phrase, scales = "free_x") + 
   geom_hline(yintercept = c(8,10,12), color = "grey") + 
   geom_line(color = "black", linetype = "dashed") +
-  geom_heart(fill = "white", color = "black") +
-  geom_text(size = 5, alpha = 0 ) +
+  geom_heart(fill = "white", color = "black", alpha = 1) +
+  geom_text(size = 3, nudge_y = -.05, aes(alpha = nchar(lyric) > 1 | lyric %in% letters[1:4] | lyric == "&" |lyric %in% LETTERS[1:4]), show.legend = F) +
   # coord_equal() + 
   # aes(fill = doremi, color = doremi) +
   ggstamp::theme_void_fill("white") +
@@ -495,7 +537,7 @@ last_plot() +
    aes(color = wt > 3.4)
 ```
 
-# Dates extension example - geom progression
+<!-- # Dates extension example - geom progression -->
 
 ```{r}
 
@@ -503,16 +545,24 @@ last_plot() +
 compute_group_progression <- function(data, scales){
   
   data |>
-    mutate(xend = lag(x)) |>
-    mutate(yend = lag(y)) 
+    mutate(xend = lead(x)) |>
+    mutate(yend = lead(y)) 
   
 }
 
 
-create_layer_temp(fun_name = "geom_progression",
+create_layer_temp(fun_name = "stat_progression",
                   compute_group = compute_group_progression,
                   required_aes = c("x","y"),
                   geom_default = "segment")
+
+
+geom_progression <- function(...){
+  
+  stat_progression(arrow = arrow(ends = "last", length = unit(.1, "in")),...)
+  
+}
+
 
 
 tibble::tribble(~event, ~date,
@@ -521,9 +571,23 @@ tibble::tribble(~event, ~date,
                 "extended\ndeadline", 5) |>
   ggplot() + 
   aes(x = date, y = "Conf") + 
-  geom_progression(arrow = arrow(ends = "first")) + 
+  geom_progression() + 
   geom_point() +
   geom_text(aes(label = event), vjust = 0)
+
+
+
+# And w/ stackoverflow example.
+# https://stackoverflow.com/questions/70249589/how-to-add-multiple-arrows-to-a-path-according-to-line-direction-using-ggplot2
+data.frame(long =  c(0.596, 0.641, 0.695, 0.741, 0.788, 0.837,
+       0.887, 0.937, 0.993, 0.984, 0.934, 0.886,
+       0.838, 0.778, 0.738, 0.681, 0.642, 0.593),
+       lat = c(23.630, 24.085, 24.643, 25.067, 25.491, 25.899,
+       26.305, 26.670, 27.049, 27.025, 26.836, 26.636,
+       26.429, 26.152, 25.965, 25.664, 25.442, 24.510)) %>% 
+  ggplot() + 
+  aes(x = long, y = lat) + 
+  geom_progression()
 
 
 
@@ -597,28 +661,10 @@ last_plot() +
 
 
 
-# ggproto manipulation
+### some more things to try
 
-```{r}
-StatCircle <- ggplot2::ggproto(
-  `_class` = "StatCircle",
-  `_inherit` = ggplot2::Stat,
-  compute_group = function(data, scales){},
-  required_aes = c("x0", "y0", "r"))
-
-length(StatCircle)
-
-StatCircle2 <- ggplot2::ggproto(
-  `_class` = "StatCircle",
-  `_inherit` = ggplot2::Stat,
-  compute_group = StatCircle$compute_group,
-  required_aes = c("x0", "y0", "r"))
-
-waldo::compare(StatCircle, StatCircle2)
-```
-
-
-## Diverging bar chart...
+- Diverging bar chart...
+- date input to month layout
 
 
 # spatial 'status quo' of ggplot2 extension cookbook
@@ -759,7 +805,7 @@ define_layer_sf_temp <- function(ref_df,
                                  geom_default = ggplot2::GeomSf, 
                                  required_aes, 
                                  default_aes = ggplot2::aes(),
-                                 compute_panel = NULL, 
+                                 stamp = FALSE,
                                  mapping = NULL,
                                  data = NULL,
                                  position = "identity",
@@ -779,17 +825,37 @@ ref_df_w_bb_and_xy_centers <-
   data.frame() |>
   add_xy_coords()
 
-compute_panel_county <- function(data, scales){
+  ref_df_w_bb_and_xy_centers$id_col <- ref_df_w_bb_and_xy_centers[,1]
+
+
+
+compute_panel_geo <- function(data, scales, keep = NULL, drop = c()){
   
-  data |> 
-    dplyr::inner_join(ref_df_w_bb_and_xy_centers)
+  if(!stamp){
+  
+  out <- data |> 
+    dplyr::inner_join(ref_df_w_bb_and_xy_centers) |>
+    filter(!(id_col %in% drop))
+
+  
+  }
+  
+  if(stamp){
+  
+  out <- ref_df_w_bb_and_xy_centers |>
+    filter(!(id_col %in% drop))
+    
+  }
+  
+  out
   
 }
+
 
 StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
                                 `_inherit` = ggplot2::Stat,
                                 required_aes = required_aes,
-                                compute_panel = compute_panel_county,
+                                compute_panel = compute_panel_geo,
                                default_aes = default_aes)
 
   if(is.null(geom)){geom <- geom_default}
@@ -845,7 +911,7 @@ last_plot() +
 
 last_plot() +
   geom_county2(geom = "text", 
-              mapping = aes(label = BIR74))  #oh no!
+              mapping = aes(label = BIR74))  #oh! 
 
 ```
 
@@ -952,11 +1018,51 @@ NLD_muni |>
   geom_nl_muni() + 
   geom_nl_muni(geom = "text", 
                data = . %>% filter(population > 100000 ),
-               check_overlap = T) + 
+               check_overlap = T,
+               color = "gray80",
+               face = "bold") + 
   aes(fill = pop_15_24) + 
-  scale_fill_viridis_c()
+  scale_fill_viridis_c() + 
+  ggstamp::theme_void_fill("grey")
 ```
 
+<!-- # for brain example, stamp? -->
+
+<!-- ```{r} -->
+<!-- library(ggplot2) -->
+<!-- ggseg::aseg$data |> -->
+<!--   dplyr::filter(!is.na(label)) %>%  -->
+<!--   rename(seg_id = label) -> -->
+<!-- id_and_boundaries -->
+
+<!-- ggseg::aseg$data |> -->
+<!--   dplyr::filter(!is.na(label)) |> -->
+<!--   sf::st_drop_geometry() -> -->
+<!-- regions_flat -->
+
+<!-- # th -->
+<!-- id_and_boundaries |> -->
+<!--    dplyr::left_join(regions_flat) |> -->
+<!--    ggplot() + -->
+<!--    geom_sf() +  -->
+<!--    aes(fill = hemi) -->
+
+
+<!-- create_layer_sf_temp(id_and_boundaries,  -->
+<!--                      fun_name = "stamp_brain", -->
+<!--                      default_aes = aes(label = after_stat(region)), -->
+<!--                      required_aes = character() -->
+<!--                      ) -->
+
+
+<!-- library(ggplot2) -->
+<!-- regions_flat %>% -->
+<!--   ggplot() + -->
+<!--   aes(seg_id = seg_id,  -->
+<!--       fill = region == "amygdala") + -->
+<!--   geom_brain()  -->
+
+<!-- ``` -->
 
 
 ```{r}
