@@ -7,6 +7,7 @@ define_layer_temp <- function(
   compute_group = NULL,
   compute_panel = NULL, 
   compute_layer = NULL,
+  setup_data = NULL,
   # finish_layer = # we'll work on making these stat ggproto slots accessible too
   # retransform
   # extra_params =
@@ -32,6 +33,7 @@ StatTemp <- ggproto(
 if(!is.null(compute_group)){StatTemp$compute_group <- compute_group}
 if(!is.null(compute_panel)){StatTemp$compute_panel <- compute_panel}
 if(!is.null(compute_layer)){StatTemp$compute_layer <- compute_layer}
+if(!is.null(setup_data)){StatTemp$setup_data <- setup_data}
 
   if(is.null(geom)){geom <- geom_default}
 

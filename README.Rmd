@@ -11,7 +11,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   eval = T,
-  warning = F
+  warning = F,
+  message = F
 )
 ```
 
@@ -125,6 +126,7 @@ define_layer_temp <- function(
   compute_group = NULL,
   compute_panel = NULL, 
   compute_layer = NULL,
+  setup_data = NULL,
   # finish_layer = # we'll work on making these stat ggproto slots accessible too
   # retransform
   # extra_params =
@@ -150,6 +152,7 @@ StatTemp <- ggproto(
 if(!is.null(compute_group)){StatTemp$compute_group <- compute_group}
 if(!is.null(compute_panel)){StatTemp$compute_panel <- compute_panel}
 if(!is.null(compute_layer)){StatTemp$compute_layer <- compute_layer}
+if(!is.null(setup_data)){StatTemp$setup_data <- setup_data}
 
   if(is.null(geom)){geom <- geom_default}
 
@@ -594,7 +597,48 @@ data.frame(long =  c(0.596, 0.641, 0.695, 0.741, 0.788, 0.837,
 
 ```
 
+# prop
 
+```{r}
+setup_data_prop <- function(data, params){
+  
+  data |>
+    mutate(x = paste("test", x))
+  
+}
+
+
+compute_panel_prop <- function(data, scales, true_case = "Yes"){
+  
+  if(is.null(data$weight)){data$weight <- 1}
+  
+  data |>
+    group_by(x) |>
+    summarise(y = sum(weight)) |>
+    mutate(x_num_lab = as.numeric(x == true_case)) |>
+    mutate(x = as.numeric(x)) |>
+    mutate(x = factor(paste(x, x_num_lab)) )
+  
+}
+
+# Titanic |> 
+#   data.frame() |>
+#   summarise(weight = Freq, x = Survived) |>
+#   compute_panel_prop()
+# 
+# 
+# create_layer_temp("geom_prop",
+#                   setup_data = setup_data_prop,
+#                   compute_panel = compute_panel_prop,
+#                   geom = "col")
+# 
+# Titanic |> 
+#   data.frame() |>
+#   ggplot() + 
+#   aes(x = Survived, weight = Freq) + 
+#   geom_prop()
+
+```
 
 
 <!-- # in 100 -->

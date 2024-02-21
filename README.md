@@ -63,16 +63,6 @@ geoms\_\* functions with the same define\_temp\_geom wrapper…
 
 ``` r
 library(tidyverse)
-#> ── Attaching core tidyverse packages ─────────────────── tidyverse 2.0.0.9000 ──
-#> ✔ dplyr     1.1.0          ✔ readr     2.1.4     
-#> ✔ forcats   1.0.0          ✔ stringr   1.5.0     
-#> ✔ ggplot2   3.4.4.9000     ✔ tibble    3.2.1     
-#> ✔ lubridate 1.9.2          ✔ tidyr     1.3.0     
-#> ✔ purrr     1.0.1          
-#> ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-#> ✖ dplyr::filter() masks stats::filter()
-#> ✖ dplyr::lag()    masks stats::lag()
-#> ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 compute_panel_equilateral <- function(data, scales, n = 15){
   
   data |> 
@@ -130,6 +120,7 @@ define_layer_temp <- function(
   compute_group = NULL,
   compute_panel = NULL, 
   compute_layer = NULL,
+  setup_data = NULL,
   # finish_layer = # we'll work on making these stat ggproto slots accessible too
   # retransform
   # extra_params =
@@ -155,6 +146,7 @@ StatTemp <- ggproto(
 if(!is.null(compute_group)){StatTemp$compute_group <- compute_group}
 if(!is.null(compute_panel)){StatTemp$compute_panel <- compute_panel}
 if(!is.null(compute_layer)){StatTemp$compute_layer <- compute_layer}
+if(!is.null(setup_data)){StatTemp$setup_data <- setup_data}
 
   if(is.null(geom)){geom <- geom_default}
 
@@ -719,8 +711,6 @@ tibble::tribble(~event, ~date,
   geom_progression() + 
   geom_point() +
   geom_text(aes(label = event), vjust = 0)
-#> Warning: Removed 1 row containing missing values or values outside the scale range
-#> (`geom_segment()`).
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
@@ -740,11 +730,51 @@ data.frame(long =  c(0.596, 0.641, 0.695, 0.741, 0.788, 0.837,
   ggplot() + 
   aes(x = long, y = lat) + 
   geom_progression()
-#> Warning: Removed 1 row containing missing values or values outside the scale range
-#> (`geom_segment()`).
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
+
+# prop
+
+``` r
+setup_data_prop <- function(data, params){
+  
+  data |>
+    mutate(x = paste("test", x))
+  
+}
+
+
+compute_panel_prop <- function(data, scales, true_case = "Yes"){
+  
+  if(is.null(data$weight)){data$weight <- 1}
+  
+  data |>
+    group_by(x) |>
+    summarise(y = sum(weight)) |>
+    mutate(x_num_lab = as.numeric(x == true_case)) |>
+    mutate(x = as.numeric(x)) |>
+    mutate(x = factor(paste(x, x_num_lab)) )
+  
+}
+
+# Titanic |> 
+#   data.frame() |>
+#   summarise(weight = Freq, x = Survived) |>
+#   compute_panel_prop()
+# 
+# 
+# create_layer_temp("geom_prop",
+#                   setup_data = setup_data_prop,
+#                   compute_panel = compute_panel_prop,
+#                   geom = "col")
+# 
+# Titanic |> 
+#   data.frame() |>
+#   ggplot() + 
+#   aes(x = Survived, weight = Freq) + 
+#   geom_prop()
+```
 
 <!-- # in 100 -->
 
@@ -890,14 +920,6 @@ northcarolina_county_reference <- northcarolina_county_reference0 |>
   tidyr::unnest(bb) |>
   data.frame() |>
   add_xy_coords() 
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-#> Warning: The `x` argument of `as_tibble.matrix()` must have unique column names if
-#> `.name_repair` is omitted as of tibble 2.0.0.
-#> ℹ Using compatibility `.name_repair`.
-#> This warning is displayed once every 8 hours.
-#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-#> generated.
 
 compute_panel_county <- function(data, scales){
   
@@ -952,11 +974,9 @@ ggnorthcarolina::northcarolina_county_flat |>
   stat_county(geom = 'text', 
               aes(label = SID74),
               color = "oldlace")
-#> Joining with `by = join_by(fips)`
-#> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 # define\_layer\_sf\_temp build
 
@@ -1113,26 +1133,17 @@ ggnorthcarolina::northcarolina_county_flat |>
   aes(fill = SID74/BIR74)  +
   geom_county2(geom = "text",
                color = "pink")
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-#> Joining with `by = join_by(fips)`
-#> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
   
 last_plot() + 
   aes(label = BIR74)
-#> Joining with `by = join_by(fips)`
-#> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
 
 ``` r
 
@@ -1140,14 +1151,9 @@ last_plot() +
 last_plot() +
   geom_county2(geom = "text", 
               mapping = aes(label = BIR74))  #oh! 
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-#> Joining with `by = join_by(fips)`
-#> Joining with `by = join_by(fips)`
-#> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-15-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-3.png)<!-- -->
 
 ``` r
 create_layer_sf_temp <- function(ref_df, 
@@ -1201,16 +1207,9 @@ ggnorthcarolina::northcarolina_county_flat |>
   aes(fill = SID74/BIR74) + 
   geom_county(geom = "text", 
               mapping = aes(label = BIR74)) # oh ho!!
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-#> Joining with `by = join_by(fips)`
-#> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
 
@@ -1221,21 +1220,12 @@ ggnorthcarolina::northcarolina_county_flat |>
   aes(fill = SID74/BIR74) + 
   geom_county(geom = "text", color = "pink",
               check_overlap = T)
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-#> Joining with `by = join_by(fips)`
-#> Joining with `by = join_by(fips)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->
 
 ``` r
 library(tmap)
-#> Breaking News: tmap 3.x is retiring. Please test v4, e.g. with
-#> remotes::install_github('r-tmap/tmap')
 data(NLD_prov)
 data("NLD_muni")
 
@@ -1270,15 +1260,9 @@ NLD_prov |>
   geom_nl_prov() + 
   geom_nl_prov(geom = "text") + 
   aes(fill = pop_15_24) 
-#> old-style crs object detected; please recreate object with a recent sf::st_crs()
-#> old-style crs object detected; please recreate object with a recent sf::st_crs()
-#> old-style crs object detected; please recreate object with a recent sf::st_crs()
-#> old-style crs object detected; please recreate object with a recent sf::st_crs()
-#> Joining with `by = join_by(prov_code)`
-#> Joining with `by = join_by(prov_code)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ``` r
 
@@ -1296,16 +1280,9 @@ NLD_muni |>
   aes(fill = pop_15_24) + 
   scale_fill_viridis_c() + 
   ggstamp::theme_void_fill("grey")
-#> old-style crs object detected; please recreate object with a recent sf::st_crs()
-#> old-style crs object detected; please recreate object with a recent sf::st_crs()
-#> old-style crs object detected; please recreate object with a recent sf::st_crs()
-#> Warning in ggplot2::layer_sf(stat = StatTempsf, geom = geom, data = data, :
-#> Ignoring unknown parameters: `face`
-#> old-style crs object detected; please recreate object with a recent sf::st_crs()
-#> Joining with `by = join_by(muni_code)`Joining with `by = join_by(muni_code)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
 
 <!-- # for brain example, stamp? -->
 
@@ -1387,29 +1364,14 @@ gapminder::gapminder |>
   geom_country(geom = "text", 
                mapping = aes(label = country),
                check_overlap =T)
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-#> Joining with `by = join_by(country_name)`
-#> Joining with `by = join_by(country_name)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
 
 library(tidyverse)
 heritage_wide <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-02-06/heritage.csv') 
-#> Rows: 3 Columns: 3
-#> ── Column specification ────────────────────────────────────────────────────────
-#> Delimiter: ","
-#> chr (1): country
-#> dbl (2): 2004, 2022
-#> 
-#> ℹ Use `spec()` to retrieve the full column specification for this data.
-#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 
 heritage <- heritage_wide |>
   pivot_longer(-1, names_to = "year", values_to = "count") |>
@@ -1423,18 +1385,9 @@ heritage |>
   aes(fill = count) + 
   facet_grid(~year) + 
   geom_country(geom = "text", mapping = aes(label = paste(country, count, sep = "\n")))
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-
-#> Warning in st_point_on_surface.sfc(sf::st_zm(dplyr::pull(geo_df, geometry))):
-#> st_point_on_surface may not give correct results for longitude/latitude data
-#> Joining with `by = join_by(country_name)`
-#> Joining with `by = join_by(country_name)`
-#> Joining with `by = join_by(country_name)`
-#> Joining with `by = join_by(country_name)`
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-2.png)<!-- -->
 
 # Part II. Packaging and documentation 🚧 ✅
 
@@ -1518,7 +1471,7 @@ ggplot(cars) +
   geom_circle_points()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
   - Bit H. Chosen a license? 🚧 ✅
 
@@ -1526,8 +1479,6 @@ ggplot(cars) +
 
 ``` r
 usethis::use_mit_license()
-#> ✔ Setting active project to '/Users/evangelinereynolds/Google
-#> Drive/r_packages/ggtemp'
 ```
 
   - Bit I. Add lifecycle badge (experimental)
@@ -1536,10 +1487,6 @@ usethis::use_mit_license()
 
 ``` r
 usethis::use_lifecycle_badge("experimental")
-#> • Copy and paste the following lines into 'README.Rmd':
-#>   <!-- badges: start -->
-#>   [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-#>   <!-- badges: end -->
 ```
 
 ## Phase 2: Listen & iterate 🚧 ✅
@@ -1611,8 +1558,6 @@ all[11:17]
 
 ``` r
 devtools::check(pkg = ".")
-#> ℹ Updating ggtemp documentation
-#> ℹ Loading ggtemp
 #> Error: R CMD check found WARNINGs
 ```
 
