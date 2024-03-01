@@ -125,6 +125,7 @@
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">compute_panel_equilateral</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">scales</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">15</span><span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
 <span>  <span class="va">data</span> <span class="op">|&gt;</span> </span>
@@ -427,7 +428,9 @@
 <h3 id="a-point-with-no-required-aes">A point with no required aes<a class="anchor" aria-label="anchor" href="#a-point-with-no-required-aes"></a>
 </h3>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">compute_group_point</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">scales</span><span class="op">)</span><span class="op">{</span></span>
+<code class="sourceCode R"><span><span class="va">`%||%`</span> <span class="op">&lt;-</span> <span class="fu">ggplot2</span><span class="fu">:::</span><span class="va">`%||%`</span></span>
+<span></span>
+<span><span class="va">compute_group_point</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">scales</span><span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
 <span>  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span><span class="op">{</span><span class="va">data</span><span class="op">$</span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">0</span><span class="op">}</span></span>
 <span>  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">{</span><span class="va">data</span><span class="op">$</span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fl">0</span><span class="op">}</span></span>
@@ -438,61 +441,17 @@
 <span></span>
 <span><span class="va">cars</span> <span class="op">|&gt;</span></span>
 <span> <span class="fu">select</span><span class="op">(</span>x <span class="op">=</span> <span class="va">speed</span>, y <span class="op">=</span> <span class="va">dist</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">compute_group_point</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt;     x   y</span></span>
-<span><span class="co">#&gt; 1   4   2</span></span>
-<span><span class="co">#&gt; 2   4  10</span></span>
-<span><span class="co">#&gt; 3   7   4</span></span>
-<span><span class="co">#&gt; 4   7  22</span></span>
-<span><span class="co">#&gt; 5   8  16</span></span>
-<span><span class="co">#&gt; 6   9  10</span></span>
-<span><span class="co">#&gt; 7  10  18</span></span>
-<span><span class="co">#&gt; 8  10  26</span></span>
-<span><span class="co">#&gt; 9  10  34</span></span>
-<span><span class="co">#&gt; 10 11  17</span></span>
-<span><span class="co">#&gt; 11 11  28</span></span>
-<span><span class="co">#&gt; 12 12  14</span></span>
-<span><span class="co">#&gt; 13 12  20</span></span>
-<span><span class="co">#&gt; 14 12  24</span></span>
-<span><span class="co">#&gt; 15 12  28</span></span>
-<span><span class="co">#&gt; 16 13  26</span></span>
-<span><span class="co">#&gt; 17 13  34</span></span>
-<span><span class="co">#&gt; 18 13  34</span></span>
-<span><span class="co">#&gt; 19 13  46</span></span>
-<span><span class="co">#&gt; 20 14  26</span></span>
-<span><span class="co">#&gt; 21 14  36</span></span>
-<span><span class="co">#&gt; 22 14  60</span></span>
-<span><span class="co">#&gt; 23 14  80</span></span>
-<span><span class="co">#&gt; 24 15  20</span></span>
-<span><span class="co">#&gt; 25 15  26</span></span>
-<span><span class="co">#&gt; 26 15  54</span></span>
-<span><span class="co">#&gt; 27 16  32</span></span>
-<span><span class="co">#&gt; 28 16  40</span></span>
-<span><span class="co">#&gt; 29 17  32</span></span>
-<span><span class="co">#&gt; 30 17  40</span></span>
-<span><span class="co">#&gt; 31 17  50</span></span>
-<span><span class="co">#&gt; 32 18  42</span></span>
-<span><span class="co">#&gt; 33 18  56</span></span>
-<span><span class="co">#&gt; 34 18  76</span></span>
-<span><span class="co">#&gt; 35 18  84</span></span>
-<span><span class="co">#&gt; 36 19  36</span></span>
-<span><span class="co">#&gt; 37 19  46</span></span>
-<span><span class="co">#&gt; 38 19  68</span></span>
-<span><span class="co">#&gt; 39 20  32</span></span>
-<span><span class="co">#&gt; 40 20  48</span></span>
-<span><span class="co">#&gt; 41 20  52</span></span>
-<span><span class="co">#&gt; 42 20  56</span></span>
-<span><span class="co">#&gt; 43 20  64</span></span>
-<span><span class="co">#&gt; 44 22  66</span></span>
-<span><span class="co">#&gt; 45 23  54</span></span>
-<span><span class="co">#&gt; 46 24  70</span></span>
-<span><span class="co">#&gt; 47 24  92</span></span>
-<span><span class="co">#&gt; 48 24  93</span></span>
-<span><span class="co">#&gt; 49 24 120</span></span>
-<span><span class="co">#&gt; 50 25  85</span></span>
+<span>  <span class="fu">compute_group_point</span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   x  y</span></span>
+<span><span class="co">#&gt; 1 4  2</span></span>
+<span><span class="co">#&gt; 2 4 10</span></span>
+<span><span class="co">#&gt; 3 7  4</span></span>
+<span><span class="co">#&gt; 4 7 22</span></span>
+<span><span class="co">#&gt; 5 8 16</span></span>
+<span><span class="co">#&gt; 6 9 10</span></span>
 <span></span>
-<span></span>
-<span><span class="fu">create_layer_temp</span><span class="op">(</span>fun_name <span class="op">=</span> <span class="st">"geom_point2"</span>,</span>
+<span><span class="fu">create_layer_temp</span><span class="op">(</span>fun_name <span class="op">=</span> <span class="st">"geom_point_zero_xy_defaults"</span>,</span>
 <span>                           compute_group <span class="op">=</span> <span class="va">compute_group_point</span>,</span>
 <span>                           required_aes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>                           default_aes <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="cn">NULL</span>, y <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>,</span>
@@ -500,23 +459,14 @@
 <span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">cars</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu">geom_point2</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">.7</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-9-1.png"><!-- --></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
+<span>  <span class="fu">geom_point_zero_xy_defaults</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">.7</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/last_plot.html" class="external-link">last_plot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">speed</span><span class="op">)</span> </span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-9-2.png"><!-- --></p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">speed</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/last_plot.html" class="external-link">last_plot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">dist</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-9-3.png"><!-- --></p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/last_plot.html" class="external-link">last_plot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"all"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-9-4.png"><!-- --></p>
+<p><img src="reference/figures/README-unnamed-chunk-9-1.png" width="33%"><img src="reference/figures/README-unnamed-chunk-9-2.png" width="33%"><img src="reference/figures/README-unnamed-chunk-9-3.png" width="33%"></p>
 <!-- ### a cute musical example... -->
 <!-- ```{r, fig.width=12, fig.height=7} -->
 <!-- twinkle_little_star_drm <- "ddsslls ffmmrrd" -->
@@ -580,7 +530,7 @@
 <div class="section level1">
 <h1 id="geom_xmean-on-the-fly-with-compute-group">geom_xmean on the fly with compute group…<a class="anchor" aria-label="anchor" href="#geom_xmean-on-the-fly-with-compute-group"></a>
 </h1>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># 1. write some compute</span></span>
 <span><span class="va">compute_group_xmean</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">scales</span><span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
@@ -607,7 +557,7 @@
 <div class="section level2">
 <h2 id="compute_oval_minmax">compute_oval_minmax<a class="anchor" aria-label="anchor" href="#compute_oval_minmax"></a>
 </h2>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">compute_oval_minmax</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">scales</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
 <span>  <span class="va">data</span> <span class="op">|&gt;</span> </span>
@@ -654,16 +604,14 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">geom_oval_xy_range</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-unnamed-chunk-11-1.png"><!-- --></p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/last_plot.html" class="external-link">last_plot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>   <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">wt</span> <span class="op">&gt;</span> <span class="fl">3.4</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-unnamed-chunk-11-2.png"><!-- --></p>
 <!-- # Dates extension example - geom progression -->
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span></span>
-<span><span class="va">compute_group_progression</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">scales</span><span class="op">)</span><span class="op">{</span></span>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">compute_group_progression</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">scales</span><span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
 <span>  <span class="va">data</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu">mutate</span><span class="op">(</span>xend <span class="op">=</span> <span class="fu">lead</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -678,6 +626,7 @@
 <span>                  geom_default <span class="op">=</span> <span class="st">"segment"</span><span class="op">)</span></span>
 <span></span>
 <span></span>
+<span><span class="co"># A some point this illustrated a problem for me.  But cannot articulate now.  I think I wanted to make the arrow argument available to the user, but it failed.</span></span>
 <span><span class="va">geom_progression</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
 <span>  <span class="fu">stat_progression</span><span class="op">(</span>arrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/arrow.html" class="external-link">arrow</a></span><span class="op">(</span>ends <span class="op">=</span> <span class="st">"last"</span>, length <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">.1</span>, <span class="st">"in"</span><span class="op">)</span><span class="op">)</span>,<span class="va">...</span><span class="op">)</span></span>
@@ -696,7 +645,7 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_text.html" class="external-link">geom_text</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="va">event</span><span class="op">)</span>, vjust <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-unnamed-chunk-12-1.png"><!-- --></p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span></span>
 <span></span>
@@ -712,49 +661,6 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">long</span>, y <span class="op">=</span> <span class="va">lat</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">geom_progression</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-unnamed-chunk-12-2.png"><!-- --></p>
-</div>
-</div>
-<div class="section level1">
-<h1 id="prop">prop<a class="anchor" aria-label="anchor" href="#prop"></a>
-</h1>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">setup_data_prop</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">params</span><span class="op">)</span><span class="op">{</span></span>
-<span>  </span>
-<span>  <span class="va">data</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">mutate</span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"test"</span>, <span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
-<span>  </span>
-<span><span class="op">}</span></span>
-<span></span>
-<span></span>
-<span><span class="va">compute_panel_prop</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">scales</span>, <span class="va">true_case</span> <span class="op">=</span> <span class="st">"Yes"</span><span class="op">)</span><span class="op">{</span></span>
-<span>  </span>
-<span>  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">data</span><span class="op">$</span><span class="va">weight</span><span class="op">)</span><span class="op">)</span><span class="op">{</span><span class="va">data</span><span class="op">$</span><span class="va">weight</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">}</span></span>
-<span>  </span>
-<span>  <span class="va">data</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">group_by</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">summarise</span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">weight</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">mutate</span><span class="op">(</span>x_num_lab <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">x</span> <span class="op">==</span> <span class="va">true_case</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">mutate</span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">mutate</span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">x_num_lab</span><span class="op">)</span><span class="op">)</span> <span class="op">)</span></span>
-<span>  </span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="co"># Titanic |&gt; </span></span>
-<span><span class="co">#   data.frame() |&gt;</span></span>
-<span><span class="co">#   summarise(weight = Freq, x = Survived) |&gt;</span></span>
-<span><span class="co">#   compute_panel_prop()</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># create_layer_temp("geom_prop",</span></span>
-<span><span class="co">#                   setup_data = setup_data_prop,</span></span>
-<span><span class="co">#                   compute_panel = compute_panel_prop,</span></span>
-<span><span class="co">#                   geom = "col")</span></span>
-<span><span class="co"># </span></span>
-<span><span class="co"># Titanic |&gt; </span></span>
-<span><span class="co">#   data.frame() |&gt;</span></span>
-<span><span class="co">#   ggplot() + </span></span>
-<span><span class="co">#   aes(x = Survived, weight = Freq) + </span></span>
-<span><span class="co">#   geom_prop()</span></span></code></pre></div>
 <!-- # in 100 -->
 <!-- ```{r} -->
 <!-- tibble(outcome = sample(0:1, 1000, replace = T)) |> -->
@@ -804,10 +710,11 @@
 <!-- - Diverging bar chart... -->
 <!-- - date input to month layout -->
 </div>
+</div>
 <div class="section level1">
 <h1 id="spatial-status-quo-of-ggplot2-extension-cookbook">spatial ‘status quo’ of ggplot2 extension cookbook<a class="anchor" aria-label="anchor" href="#spatial-status-quo-of-ggplot2-extension-cookbook"></a>
 </h1>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">northcarolina_county_reference0</span> <span class="op">&lt;-</span></span>
 <span>  <span class="fu">sf</span><span class="fu">::</span><span class="fu">st_read</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"shape/nc.shp"</span>, package<span class="op">=</span><span class="st">"sf"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">rename</span><span class="op">(</span>county_name <span class="op">=</span> <span class="va">NAME</span>,</span>
@@ -907,12 +814,12 @@
 <span>  <span class="fu">stat_county</span><span class="op">(</span>geom <span class="op">=</span> <span class="st">'text'</span>, </span>
 <span>              <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="va">SID74</span><span class="op">)</span>,</span>
 <span>              color <span class="op">=</span> <span class="st">"oldlace"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-14-1.png"><!-- --></p>
+<p><img src="reference/figures/README-unnamed-chunk-13-1.png"><!-- --></p>
 </div>
 <div class="section level1">
-<h1 id="define_layer_sf_temp-build">define_layer_sf_temp build<a class="anchor" aria-label="anchor" href="#define_layer_sf_temp-build"></a>
+<h1 id="define_layer_sf_temp-build-lets-go">define_layer_sf_temp build. Let’s go!<a class="anchor" aria-label="anchor" href="#define_layer_sf_temp-build-lets-go"></a>
 </h1>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">northcarolina_county_reference0</span> <span class="op">&lt;-</span></span>
 <span>  <span class="fu">sf</span><span class="fu">::</span><span class="fu">st_read</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"shape/nc.shp"</span>, package<span class="op">=</span><span class="st">"sf"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">rename</span><span class="op">(</span>county_name <span class="op">=</span> <span class="va">NAME</span>,</span>
@@ -926,7 +833,7 @@
 <span><span class="co">#&gt; Dimension:     XY</span></span>
 <span><span class="co">#&gt; Bounding box:  xmin: -84.32385 ymin: 33.88199 xmax: -75.45698 ymax: 36.58965</span></span>
 <span><span class="co">#&gt; Geodetic CRS:  NAD27</span></span></code></pre></div>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">return_st_bbox_df</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">sf_df</span><span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
 <span>  <span class="va">bb</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu">st_bbox</span><span class="op">(</span><span class="va">sf_df</span><span class="op">)</span></span>
@@ -957,6 +864,9 @@
 <span>                                 <span class="va">required_aes</span>, </span>
 <span>                                 <span class="va">default_aes</span> <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>                                 <span class="va">stamp</span> <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                                 <span class="va">keep_default</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                                 <span class="va">drop_default</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                                 <span class="va">id_col_name</span> <span class="op">=</span> <span class="cn">NULL</span>, <span class="co"># for keep drop</span></span>
 <span>                                 <span class="va">mapping</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>                                 <span class="va">data</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>                                 <span class="va">position</span> <span class="op">=</span> <span class="st">"identity"</span>,</span>
@@ -966,7 +876,8 @@
 <span>                                 <span class="va">crs</span> <span class="op">=</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu">st_crs</span><span class="op">(</span><span class="va">ref_df</span><span class="op">)</span>,</span>
 <span>                                 <span class="va">...</span><span class="op">)</span><span class="op">{</span></span>
 <span></span>
-<span></span>
+<span>   </span>
+<span>  </span>
 <span><span class="va">ref_df_w_bb_and_xy_centers</span> <span class="op">&lt;-</span> </span>
 <span>  <span class="va">ref_df</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">mutate</span><span class="op">(</span>bb <span class="op">=</span></span>
@@ -976,29 +887,18 @@
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">add_xy_coords</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span>  <span class="va">ref_df_w_bb_and_xy_centers</span><span class="op">$</span><span class="va">id_col</span> <span class="op">&lt;-</span> <span class="va">ref_df_w_bb_and_xy_centers</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
+<span>  <span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">id_col_name</span><span class="op">)</span><span class="op">)</span><span class="op">{</span><span class="va">id_col_name</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">}</span></span>
+<span>  <span class="va">ref_df_w_bb_and_xy_centers</span><span class="op">$</span><span class="va">id_col</span> <span class="op">&lt;-</span> <span class="va">ref_df</span><span class="op">[</span>,<span class="va">id_col_name</span><span class="op">]</span></span>
 <span></span>
-<span></span>
-<span></span>
-<span><span class="va">compute_panel_geo</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">scales</span>, <span class="va">keep</span> <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">drop</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="va">compute_panel_geo</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">scales</span>, <span class="va">keep_id</span> <span class="op">=</span> <span class="va">keep_default</span>, <span class="va">drop_id</span> <span class="op">=</span> <span class="va">drop_default</span><span class="op">)</span><span class="op">{</span></span>
 <span>  </span>
-<span>  <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="va">stamp</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">keep_id</span><span class="op">)</span><span class="op">)</span><span class="op">{</span> <span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">id_col</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">keep_id</span><span class="op">)</span> <span class="op">}</span></span>
+<span>  <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">drop_id</span><span class="op">)</span><span class="op">)</span><span class="op">{</span> <span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">data</span>, <span class="op">!</span><span class="op">(</span><span class="va">id_col</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">drop_id</span><span class="op">)</span><span class="op">)</span> <span class="op">}</span></span>
 <span>  </span>
-<span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="va">data</span> <span class="op">|&gt;</span> </span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">inner_join</span><span class="op">(</span><span class="va">ref_df_w_bb_and_xy_centers</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="op">(</span><span class="va">id_col</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">drop</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
+<span>  <span class="kw">if</span><span class="op">(</span><span class="op">!</span><span class="va">stamp</span><span class="op">)</span><span class="op">{</span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">inner_join</span><span class="op">(</span><span class="va">data</span>, <span class="va">ref_df_w_bb_and_xy_centers</span><span class="op">)</span><span class="op">}</span></span>
+<span>  <span class="kw">if</span><span class="op">(</span> <span class="va">stamp</span><span class="op">)</span><span class="op">{</span><span class="va">data</span> <span class="op">&lt;-</span> <span class="va">ref_df_w_bb_and_xy_centers</span> <span class="op">}</span></span>
 <span>  </span>
-<span>  <span class="op">}</span></span>
-<span>  </span>
-<span>  <span class="kw">if</span><span class="op">(</span><span class="va">stamp</span><span class="op">)</span><span class="op">{</span></span>
-<span>  </span>
-<span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="va">ref_df_w_bb_and_xy_centers</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="op">(</span><span class="va">id_col</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">drop</span><span class="op">)</span><span class="op">)</span></span>
-<span>    </span>
-<span>  <span class="op">}</span></span>
-<span>  </span>
-<span>  <span class="va">out</span></span>
+<span>  <span class="va">data</span></span>
 <span>  </span>
 <span><span class="op">}</span></span>
 <span></span>
@@ -1031,8 +931,8 @@
 <div class="section level3">
 <h3 id="try-it-out-1">Try it out<a class="anchor" aria-label="anchor" href="#try-it-out-1"></a>
 </h3>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span> <span class="fu">sf</span><span class="fu">::</span><span class="fu">st_read</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"shape/nc.shp"</span>, package<span class="op">=</span><span class="st">"sf"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">sf</span><span class="fu">::</span><span class="fu">st_read</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"shape/nc.shp"</span>, package<span class="op">=</span><span class="st">"sf"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">rename</span><span class="op">(</span>county_name <span class="op">=</span> <span class="va">NAME</span>,</span>
 <span>                fips <span class="op">=</span> <span class="va">FIPS</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">select</span><span class="op">(</span><span class="va">county_name</span>, <span class="va">fips</span>, <span class="va">geometry</span><span class="op">)</span> <span class="op">-&gt;</span></span>
@@ -1062,25 +962,27 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">SID74</span><span class="op">/</span><span class="va">BIR74</span><span class="op">)</span>  <span class="op">+</span></span>
 <span>  <span class="fu">geom_county2</span><span class="op">(</span>geom <span class="op">=</span> <span class="st">"text"</span>,</span>
 <span>               color <span class="op">=</span> <span class="st">"pink"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-16-1.png"><!-- --></p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<p><img src="reference/figures/README-unnamed-chunk-15-1.png"><!-- --></p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span>  </span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/last_plot.html" class="external-link">last_plot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="va">BIR74</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-16-2.png"><!-- --></p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<p><img src="reference/figures/README-unnamed-chunk-15-2.png"><!-- --></p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/last_plot.html" class="external-link">last_plot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">geom_county2</span><span class="op">(</span>geom <span class="op">=</span> <span class="st">"text"</span>, </span>
-<span>              mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="va">BIR74</span><span class="op">)</span><span class="op">)</span>  <span class="co">#oh! </span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-16-3.png"><!-- --></p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<span>              mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="va">BIR74</span><span class="op">)</span>, check_overlap <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>  <span class="co">#oh! </span></span></code></pre></div>
+<p><img src="reference/figures/README-unnamed-chunk-15-3.png"><!-- --></p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">create_layer_sf_temp</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">ref_df</span>, </span>
 <span>                                 <span class="va">fun_name</span> <span class="op">=</span><span class="st">"geom_my_sf"</span>, </span>
 <span>                                 <span class="va">required_aes</span>, </span>
 <span>                                 <span class="va">default_aes</span> <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>                                 <span class="va">geom_default</span> <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="va"><a href="https://ggplot2.tidyverse.org/reference/ggsf.html" class="external-link">GeomSf</a></span>,</span>
+<span>                                 <span class="va">keep_default</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                                 <span class="va">drop_default</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>                                 <span class="va">...</span><span class="op">)</span><span class="op">{</span></span>
 <span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/assign.html" class="external-link">assign</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">fun_name</span>, </span>
@@ -1091,12 +993,14 @@
 <span>    required_aes <span class="op">=</span> <span class="va">required_aes</span>,</span>
 <span>    geom_default <span class="op">=</span> <span class="va">geom_default</span>,</span>
 <span>    default_aes <span class="op">=</span> <span class="va">default_aes</span>,</span>
+<span>    keep <span class="op">=</span> <span class="va">keep_default</span>, </span>
+<span>    drop <span class="op">=</span> <span class="va">drop_default</span>,</span>
 <span>    <span class="va">...</span><span class="op">)</span>  <span class="op">}</span>,</span>
 <span>  pos <span class="op">=</span> <span class="fl">1</span></span>
 <span>  <span class="op">)</span></span>
 <span>  </span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">sf</span><span class="fu">::</span><span class="fu">st_read</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"shape/nc.shp"</span>, package<span class="op">=</span><span class="st">"sf"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu">rename</span><span class="op">(</span>county_name <span class="op">=</span> <span class="va">NAME</span>,</span>
 <span>                fips <span class="op">=</span> <span class="va">FIPS</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -1125,18 +1029,15 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">SID74</span><span class="op">/</span><span class="va">BIR74</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">geom_county</span><span class="op">(</span>geom <span class="op">=</span> <span class="st">"text"</span>, </span>
 <span>              mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="va">BIR74</span><span class="op">)</span><span class="op">)</span> <span class="co"># oh ho!!</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-17-1.png"><!-- --></p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<p><img src="reference/figures/README-unnamed-chunk-16-1.png"><!-- --></p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="fu">ggnorthcarolina</span><span class="fu">::</span><span class="va">northcarolina_county_flat</span> <span class="op">|&gt;</span> </span>
+<span><span class="fu">ggnorthcarolina</span><span class="fu">::</span><span class="va">northcarolina_county_flat</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fips <span class="op">=</span> <span class="va">fips</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu">geom_county</span><span class="op">(</span><span class="op">)</span>  <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">SID74</span><span class="op">/</span><span class="va">BIR74</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu">geom_county</span><span class="op">(</span>geom <span class="op">=</span> <span class="st">"text"</span>, color <span class="op">=</span> <span class="st">"pink"</span>,</span>
-<span>              check_overlap <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-17-2.png"><!-- --></p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<span>  <span class="fu">geom_county</span><span class="op">(</span>stamp <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-unnamed-chunk-16-2.png"><!-- --></p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-tmap.github.io/tmap/" class="external-link">tmap</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">NLD_prov</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"NLD_muni"</span><span class="op">)</span></span>
@@ -1172,8 +1073,8 @@
 <span>  <span class="fu">geom_nl_prov</span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">geom_nl_prov</span><span class="op">(</span>geom <span class="op">=</span> <span class="st">"text"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">pop_15_24</span><span class="op">)</span> </span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-18-1.png"><!-- --></p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<p><img src="reference/figures/README-unnamed-chunk-17-1.png"><!-- --></p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span></span>
 <span><span class="va">NLD_muni</span> <span class="op">|&gt;</span></span>
@@ -1189,7 +1090,7 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">pop_15_24</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">ggstamp</span><span class="fu">::</span><span class="fu">theme_void_fill</span><span class="op">(</span><span class="st">"grey"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-18-2.png"><!-- --></p>
+<p><img src="reference/figures/README-unnamed-chunk-17-2.png"><!-- --></p>
 <!-- # for brain example, stamp? -->
 <!-- ```{r} -->
 <!-- library(ggplot2) -->
@@ -1219,7 +1120,7 @@
 <!--       fill = region == "amygdala") + -->
 <!--   geom_brain()  -->
 <!-- ``` -->
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">rnaturalearth</span><span class="fu">::</span><span class="fu">ne_countries</span><span class="op">(</span>  </span>
 <span>  scale <span class="op">=</span> <span class="st">"medium"</span>, returnclass <span class="op">=</span> <span class="st">"sf"</span><span class="op">)</span> <span class="op">%&gt;%</span>  </span>
 <span>  <span class="fu">select</span><span class="op">(</span><span class="va">name</span>, <span class="va">continent</span>, <span class="va">geometry</span>, <span class="va">iso_a3</span><span class="op">)</span> <span class="op">%&gt;%</span> </span>
@@ -1241,8 +1142,8 @@
 <span>  <span class="fu">geom_country</span><span class="op">(</span>geom <span class="op">=</span> <span class="st">"text"</span>, </span>
 <span>               mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="va">country</span><span class="op">)</span>,</span>
 <span>               check_overlap <span class="op">=</span><span class="cn">T</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-19-1.png"><!-- --></p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<p><img src="reference/figures/README-unnamed-chunk-18-1.png"><!-- --></p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
 <span><span class="va">heritage_wide</span> <span class="op">&lt;-</span> <span class="fu">readr</span><span class="fu">::</span><span class="fu">read_csv</span><span class="op">(</span><span class="st">'https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2024/2024-02-06/heritage.csv'</span><span class="op">)</span> </span>
@@ -1259,7 +1160,7 @@
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">count</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_grid.html" class="external-link">facet_grid</a></span><span class="op">(</span><span class="op">~</span><span class="va">year</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">geom_country</span><span class="op">(</span>geom <span class="op">=</span> <span class="st">"text"</span>, mapping <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">country</span>, <span class="va">count</span>, sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-19-2.png"><!-- --></p>
+<p><img src="reference/figures/README-unnamed-chunk-18-2.png"><!-- --></p>
 </div>
 </div>
 <div class="section level1">
@@ -1273,12 +1174,12 @@
 <li>Bit B. Added roxygen skeleton? 🚧</li>
 <li>Bit C. Managed dependencies ? 🚧</li>
 </ul>
-<!-- end list --><div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<!-- end list --><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_package</span><span class="op">(</span><span class="st">"ggplot2"</span><span class="op">)</span></span></code></pre></div>
 <ul>
 <li>Bit D. Moved functions R folder? ✅</li>
 </ul>
-<!-- end list --><div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<!-- end list --><div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">readme2pkg</span><span class="fu">::</span><span class="fu">chunk_to_r</span><span class="op">(</span><span class="st">"define_layer_temp"</span><span class="op">)</span></span>
 <span><span class="fu">readme2pkg</span><span class="fu">::</span><span class="fu">chunk_to_r</span><span class="op">(</span><span class="st">"create_layer_temp"</span><span class="op">)</span></span>
 <span><span class="fu">readme2pkg</span><span class="fu">::</span><span class="fu">chunk_to_r</span><span class="op">(</span><span class="st">"define_layer_sf_temp"</span><span class="op">)</span></span>
@@ -1286,20 +1187,20 @@
 <ul>
 <li>Run <code>devtools::check()</code> and addressed errors. 🚧</li>
 </ul>
-<!-- end list --><div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<!-- end list --><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span>pkg <span class="op">=</span> <span class="st">"."</span><span class="op">)</span></span></code></pre></div>
 <ul>
 <li>✅</li>
 </ul>
-<!-- end list --><div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<!-- end list --><div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">build</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <ul>
 <li>Bit G. Write and test traditional README that uses built package. 🚧 ✅</li>
 </ul>
 <p>Install package with:</p>
-<div class="sourceCode" id="cb41"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">installgithub</span>(<span class="st">"EvaMaeRey/readme2pkg.template"</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">installgithub</span>(<span class="st">"EvaMaeRey/readme2pkg.template"</span>)</span></code></pre></div>
 <p>Then…</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://evamaerey.github.io/ggtemp/" class="external-link">ggtemp</a></span><span class="op">)</span>  <span class="co">##&lt;&lt; change to your package name here</span></span>
 <span></span>
 <span><span class="va">compute_panel_circle</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">scales</span>, <span class="va">n</span> <span class="op">=</span> <span class="fl">15</span><span class="op">)</span><span class="op">{</span></span>
@@ -1328,16 +1229,16 @@
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">cars</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x0 <span class="op">=</span> <span class="va">speed</span>, y0 <span class="op">=</span> <span class="va">dist</span>, r <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">geom_circle_points</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-unnamed-chunk-24-1.png"><!-- --></p>
+<p><img src="reference/figures/README-unnamed-chunk-23-1.png"><!-- --></p>
 <ul>
 <li>Bit H. Chosen a license? 🚧 ✅</li>
 </ul>
-<!-- end list --><div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<!-- end list --><div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_mit_license</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <ul>
 <li>Bit I. Add lifecycle badge (experimental)</li>
 </ul>
-<!-- end list --><div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<!-- end list --><div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">usethis</span><span class="fu">::</span><span class="fu">use_lifecycle_badge</span><span class="op">(</span><span class="st">"experimental"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -1356,7 +1257,7 @@
 <h3 id="bit-b-written-formal-tests-of-functions-and-save-to-test-that-folders--">Bit B. Written formal tests of functions and save to test that folders 🚧 ✅<a class="anchor" aria-label="anchor" href="#bit-b-written-formal-tests-of-functions-and-save-to-test-that-folders--"></a>
 </h3>
 <p>That would look like this…</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://testthat.r-lib.org" class="external-link">testthat</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">test_that</span><span class="op">(</span><span class="st">"calc times 2 works"</span>, <span class="op">{</span></span>
@@ -1364,7 +1265,7 @@
 <span>  <span class="fu">expect_equal</span><span class="op">(</span><span class="fu">times_two</span><span class="op">(</span><span class="fl">5</span><span class="op">)</span>, <span class="fl">10</span><span class="op">)</span></span>
 <span>  </span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">readme2pkg</span><span class="fu">::</span><span class="fu">chunk_to_tests_testthat</span><span class="op">(</span><span class="st">"test_calc_times_two_works"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -1403,14 +1304,14 @@
 <div class="section level2">
 <h2 id="description-file-extract">Description file extract<a class="anchor" aria-label="anchor" href="#description-file-extract"></a>
 </h2>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># readlines(Description)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="environment">Environment<a class="anchor" aria-label="anchor" href="#environment"></a>
 </h2>
 <p>Here I just want to print the packages and the versions</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">all</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/capture.output.html" class="external-link">capture.output</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">all</span><span class="op">[</span><span class="fl">11</span><span class="op">:</span><span class="fl">17</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] ""                                                                         </span></span>
@@ -1425,7 +1326,7 @@
 <h2 id="devtoolscheck-report">
 <code>devtools::check()</code> report<a class="anchor" aria-label="anchor" href="#devtoolscheck-report"></a>
 </h2>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">check</span><span class="op">(</span>pkg <span class="op">=</span> <span class="st">"."</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Error: R CMD check found WARNINGs</span></span></code></pre></div>
 </div>
@@ -1434,12 +1335,12 @@
 </h2>
 <p>The goal of the {xxx} package</p>
 <p>To install the dev version use the following:</p>
-<div class="sourceCode" id="cb50"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"owner/repo"</span>) <span class="co"># </span></span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"owner/repo"</span>) <span class="co"># </span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example-using-package">Example using package<a class="anchor" aria-label="anchor" href="#example-using-package"></a>
 </h2>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">mypackage</span><span class="op">)</span></span>
 <span><span class="fu">myfunction</span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span></span></code></pre></div>
 </div>
