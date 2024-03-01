@@ -2,23 +2,48 @@
 Proposing the {ggtemp} package\! 🦄
 <!-- (typical package introduction write up; but actually aspirational) -->
 
-The goal of {ggtemp} is to make writing some quick useful extension
-functions succinct.
+The goal of {ggtemp} is to make writing some quick, useful extension
+functions succinctly (right now writing new stat\_\* and geom\_\* layers
+are the focus.
 
-Right now, the amount of code required to write extensions is a bit of a
-mouthful, and could feel prohibitive for day-to-day analysis.
-Specifically, defining new geom\_\* and stat\_\* layers outside of the
-context of a package, I believe, is not common, but could be quite
-useful, ultimately making plot builds intiuitive and fun, and code more
-readable. However the usual amount of code required to make define new
-geom\_\* or stat\_\* functions, might feel like it ‘gunks up’ your
-script currently.
+Currently, the amount of code required to write some extensions is a bit
+of a mouthful, and could feel prohibitive for day-to-day analysis
+scripts. Specifically, defining new geom\_\* and stat\_\* layers outside
+of the context of a package, I believe, is not common, but could be
+quite useful, ultimately making plot builds themselves intuitive and
+fun, and code more readable. However the usual amount of code required
+to make define new geom\_\* or stat\_\* functions, might feel like it
+‘gunks up’ your script currently.
 
 With the {ggtemp} package, we’ll live in a different world (🦄 🦄 🦄) where
 the task is a snap 🫰, and the readability of the in-script definition of
 a geom\_\* or stat\_\* function is quite succinct:
 
-Proposed API where we create a new geom\_\* layer function
+Proposed API where we create a new geom\_\* layer function.
+
+Related:
+
+0.  [First experiment
+    sketch](https://evamaerey.github.io/mytidytuesday/2024-01-22-insta-geom/insta-geom.html)
+1.  [Elio C’s Stat Rasa (June Choe refered me to this cool
+    post\!)](https://eliocamp.github.io/codigo-r/en/2018/05/how-to-make-a-generic-stat-in-ggplot2/)
+2.  I enjoyed [working with StatRasa in my
+    sketchbook](https://evamaerey.github.io/mytidytuesday/2024-02-05-ggexpress-follow-up/ggexpress-follow-up.html)
+3.  [ggplot2 extension
+    cookbook](https://evamaerey.github.io/ggplot2-extension-cookbook/)
+    might serve as reference for long-form syntax.
+
+### Issues and where this all might be going:
+
+There doesn’t seem to be a complete match of the full functionality of
+the layers. For example, you have to write mapping = aes() to specify
+the aesthetic mapping within the layer.
+
+1.  Maybe we can fix this.
+2.  Maybe the temp utilities can be used for prototyping, and then we
+    return to the more conventional syntax
+
+<!-- end list -->
 
     library(ggtemp)
     
@@ -106,11 +131,13 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
   aes(fill = r)
 ```
 
-![](README_files/figure-gfm/cars-1.png)<!-- -->
+![](man/figures/README-cars-1.png)<!-- -->
 
 ## Experimental: `define_layer_temp()` combines 2 and 3 in using a temp Stat under the hood
 
 ``` r
+`%||%` <- ggplot2:::`%||%`
+
 define_layer_temp <- function(
   default_aes = ggplot2::aes(),
   required_aes = character(),
@@ -204,7 +231,7 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
   aes(fill = r)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-3-1.png)<!-- -->
 
 ``` r
 
@@ -212,7 +239,7 @@ last_plot() +
   geom_circle(geom = "point")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-3-2.png)<!-- -->
 
 ### Can you define a second w/ the same StatTemp…
 
@@ -258,7 +285,7 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
   annotate(geom = "point", x = .5, y = .5, size = 8, color = "green")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-5-1.png)<!-- -->
 
 ## And `create_layer_temp` method, even more experimental (but feeling nicer to use)
 
@@ -322,7 +349,7 @@ ggplot(cars) +
   coord_equal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-7-1.png)<!-- -->
 
 ## Let’s do star example\!
 
@@ -356,7 +383,7 @@ ggplot(cars[1:8,] ) +
   coord_equal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-8-1.png)<!-- -->
 
 ``` r
 
@@ -364,7 +391,7 @@ last_plot() +
   geom_star(geom = "point", color = "magenta")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-8-2.png)<!-- -->
 
 ### A point with no required aes
 
@@ -445,7 +472,7 @@ ggplot(cars) +
   geom_point2(alpha = .7)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-9-1.png)<!-- -->
 
 ``` r
 
@@ -453,7 +480,7 @@ last_plot() +
   aes(x = speed) 
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-9-2.png)<!-- -->
 
 ``` r
 
@@ -461,7 +488,7 @@ last_plot() +
   aes(y = dist)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
+![](man/figures/README-unnamed-chunk-9-3.png)<!-- -->
 
 ``` r
 
@@ -469,7 +496,7 @@ last_plot() +
   aes(x = "all")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-4.png)<!-- -->
+![](man/figures/README-unnamed-chunk-9-4.png)<!-- -->
 
 <!-- ### a cute musical example... -->
 
@@ -612,7 +639,7 @@ ggplot(cars) +
   aes(color = speed > 18)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-10-1.png)<!-- -->
 
 ## compute\_oval\_minmax
 
@@ -664,7 +691,7 @@ ggplot(mtcars) +
   geom_oval_xy_range()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-11-1.png)<!-- -->
 
 ``` r
 
@@ -672,7 +699,7 @@ last_plot() +
    aes(color = wt > 3.4)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-11-2.png)<!-- -->
 
 <!-- # Dates extension example - geom progression -->
 
@@ -713,7 +740,7 @@ tibble::tribble(~event, ~date,
   geom_text(aes(label = event), vjust = 0)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-12-1.png)<!-- -->
 
 ``` r
 
@@ -732,7 +759,7 @@ data.frame(long =  c(0.596, 0.641, 0.695, 0.741, 0.788, 0.837,
   geom_progression()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-12-2.png)<!-- -->
 
 # prop
 
@@ -976,7 +1003,7 @@ ggnorthcarolina::northcarolina_county_flat |>
               color = "oldlace")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-14-1.png)<!-- -->
 
 # define\_layer\_sf\_temp build
 
@@ -1135,7 +1162,7 @@ ggnorthcarolina::northcarolina_county_flat |>
                color = "pink")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
   
@@ -1143,7 +1170,7 @@ last_plot() +
   aes(label = BIR74)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-16-2.png)<!-- -->
 
 ``` r
 
@@ -1153,7 +1180,7 @@ last_plot() +
               mapping = aes(label = BIR74))  #oh! 
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-3.png)<!-- -->
+![](man/figures/README-unnamed-chunk-16-3.png)<!-- -->
 
 ``` r
 create_layer_sf_temp <- function(ref_df, 
@@ -1209,7 +1236,7 @@ ggnorthcarolina::northcarolina_county_flat |>
               mapping = aes(label = BIR74)) # oh ho!!
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
 
@@ -1222,7 +1249,7 @@ ggnorthcarolina::northcarolina_county_flat |>
               check_overlap = T)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-17-2.png)<!-- -->
 
 ``` r
 library(tmap)
@@ -1262,7 +1289,7 @@ NLD_prov |>
   aes(fill = pop_15_24) 
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-18-1.png)<!-- -->
 
 ``` r
 
@@ -1282,7 +1309,7 @@ NLD_muni |>
   ggstamp::theme_void_fill("grey")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-18-2.png)<!-- -->
 
 <!-- # for brain example, stamp? -->
 
@@ -1366,7 +1393,7 @@ gapminder::gapminder |>
                check_overlap =T)
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
 
@@ -1387,7 +1414,7 @@ heritage |>
   geom_country(geom = "text", mapping = aes(label = paste(country, count, sep = "\n")))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-19-2.png)<!-- -->
 
 # Part II. Packaging and documentation 🚧 ✅
 
@@ -1471,7 +1498,7 @@ ggplot(cars) +
   geom_circle_points()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-24-1.png)<!-- -->
 
   - Bit H. Chosen a license? 🚧 ✅
 

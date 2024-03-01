@@ -1,3 +1,5 @@
+`%||%` <- ggplot2:::`%||%`
+
 define_layer_temp <- function(
   default_aes = ggplot2::aes(),
   required_aes = character(),

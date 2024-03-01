@@ -11,6 +11,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   eval = T,
+  fig.path = "man/figures/README-",
   warning = F,
   message = F
 )
@@ -20,13 +21,29 @@ knitr::opts_chunk$set(
 Proposing the {ggtemp} package! 🦄 
 <!-- (typical package introduction write up; but actually aspirational) -->
 
-The goal of {ggtemp} is to make writing some quick useful extension functions succinct. 
+The goal of {ggtemp} is to make writing some quick, useful extension functions succinctly (right now writing new stat_* and geom_* layers are the focus. 
 
-Right now, the amount of code required to write extensions is a bit of a mouthful, and could feel prohibitive for day-to-day analysis.  Specifically, defining new geom_* and stat_* layers outside of the context of a package, I believe, is not common, but could be quite useful, ultimately making plot builds intiuitive and fun, and code more readable. However the usual amount of code required to make define new geom_* or stat_* functions, might feel like it 'gunks up' your script currently.
+Currently, the amount of code required to write some extensions is a bit of a mouthful, and could feel prohibitive for day-to-day analysis scripts.  Specifically, defining new geom_* and stat_* layers outside of the context of a package, I believe, is not common, but could be quite useful, ultimately making plot builds themselves intuitive and fun, and code more readable. However the usual amount of code required to make define new geom_* or stat_* functions, might feel like it 'gunks up' your script currently.
 
 With the {ggtemp} package, we'll live in a different world (🦄 🦄 🦄) where the task is a snap 🫰, and the readability of the in-script definition of a geom_* or stat_* function is quite succinct: 
 
-Proposed API where we create a new geom_* layer function
+Proposed API where we create a new geom_* layer function.  
+
+Related: 
+
+0. [First experiment sketch]( https://evamaerey.github.io/mytidytuesday/2024-01-22-insta-geom/insta-geom.html )
+1. [Elio C's Stat Rasa (June Choe refered me to this cool post!)]( https://eliocamp.github.io/codigo-r/en/2018/05/how-to-make-a-generic-stat-in-ggplot2/ )
+2. I enjoyed [working with StatRasa in my sketchbook]( https://evamaerey.github.io/mytidytuesday/2024-02-05-ggexpress-follow-up/ggexpress-follow-up.html)
+2. [ggplot2 extension cookbook](https://evamaerey.github.io/ggplot2-extension-cookbook/) might serve as reference for long-form syntax.
+
+
+### Issues and where this all might be going:
+
+There doesn't seem to be a complete match of the full functionality of the layers.  For example, you have to write mapping = aes() to specify the aesthetic mapping within the layer.  
+
+1. Maybe we can fix this.
+2. Maybe the temp utilities can be used for prototyping, and then we return to the more conventional syntax
+
 
 ```
 library(ggtemp)
@@ -117,6 +134,8 @@ data.frame(x0 = 0:1, y0 = 0:1, r = 1:2/3) |>
 
 
 ```{r define_layer_temp}
+`%||%` <- ggplot2:::`%||%`
+
 define_layer_temp <- function(
   default_aes = ggplot2::aes(),
   required_aes = character(),
