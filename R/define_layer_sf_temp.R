@@ -28,6 +28,9 @@ define_layer_sf_temp <- function(ref_df,
                                  required_aes, 
                                  default_aes = ggplot2::aes(),
                                  stamp = FALSE,
+                                 keep_default = NULL,
+                                 drop_default = NULL,
+                                 id_col_name = NULL, # for keep drop
                                  mapping = NULL,
                                  data = NULL,
                                  position = "identity",
@@ -37,7 +40,8 @@ define_layer_sf_temp <- function(ref_df,
                                  crs = sf::st_crs(ref_df),
                                  ...){
 
-
+   
+  
 ref_df_w_bb_and_xy_centers <- 
   ref_df |>
   dplyr::mutate(bb =
@@ -47,29 +51,18 @@ ref_df_w_bb_and_xy_centers <-
   data.frame() |>
   add_xy_coords()
 
-  ref_df_w_bb_and_xy_centers$id_col <- ref_df_w_bb_and_xy_centers[,1]
+  if(is.null(id_col_name)){id_col_name <- 1}
+  ref_df_w_bb_and_xy_centers$id_col <- ref_df[,id_col_name]
 
-
-
-compute_panel_geo <- function(data, scales, keep = NULL, drop = c()){
+compute_panel_geo <- function(data, scales, keep_id = keep_default, drop_id = drop_default){
   
-  if(!stamp){
+  if(!is.null(keep_id)){ data <- filter(data, id_col %in% keep_id) }
+  if(!is.null(drop_id)){ data <- filter(data, !(id_col %in% drop_id)) }
   
-  out <- data |> 
-    dplyr::inner_join(ref_df_w_bb_and_xy_centers) |>
-    filter(!(id_col %in% drop))
-
+  if(!stamp){data <- dplyr::inner_join(data, ref_df_w_bb_and_xy_centers)}
+  if( stamp){data <- ref_df_w_bb_and_xy_centers }
   
-  }
-  
-  if(stamp){
-  
-  out <- ref_df_w_bb_and_xy_centers |>
-    filter(!(id_col %in% drop))
-    
-  }
-  
-  out
+  data
   
 }
 

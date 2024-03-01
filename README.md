@@ -88,6 +88,7 @@ geoms\_\* functions with the same define\_temp\_geom wrapper…
 
 ``` r
 library(tidyverse)
+
 compute_panel_equilateral <- function(data, scales, n = 15){
   
   data |> 
@@ -396,6 +397,8 @@ last_plot() +
 ### A point with no required aes
 
 ``` r
+`%||%` <- ggplot2:::`%||%`
+
 compute_group_point <- function(data, scales){
   
   if(is.null(data$y)){data$y <- 0}
@@ -407,61 +410,17 @@ compute_group_point <- function(data, scales){
 
 cars |>
  select(x = speed, y = dist) |>
-  compute_group_point()
-#>     x   y
-#> 1   4   2
-#> 2   4  10
-#> 3   7   4
-#> 4   7  22
-#> 5   8  16
-#> 6   9  10
-#> 7  10  18
-#> 8  10  26
-#> 9  10  34
-#> 10 11  17
-#> 11 11  28
-#> 12 12  14
-#> 13 12  20
-#> 14 12  24
-#> 15 12  28
-#> 16 13  26
-#> 17 13  34
-#> 18 13  34
-#> 19 13  46
-#> 20 14  26
-#> 21 14  36
-#> 22 14  60
-#> 23 14  80
-#> 24 15  20
-#> 25 15  26
-#> 26 15  54
-#> 27 16  32
-#> 28 16  40
-#> 29 17  32
-#> 30 17  40
-#> 31 17  50
-#> 32 18  42
-#> 33 18  56
-#> 34 18  76
-#> 35 18  84
-#> 36 19  36
-#> 37 19  46
-#> 38 19  68
-#> 39 20  32
-#> 40 20  48
-#> 41 20  52
-#> 42 20  56
-#> 43 20  64
-#> 44 22  66
-#> 45 23  54
-#> 46 24  70
-#> 47 24  92
-#> 48 24  93
-#> 49 24 120
-#> 50 25  85
+  compute_group_point() |>
+  head()
+#>   x  y
+#> 1 4  2
+#> 2 4 10
+#> 3 7  4
+#> 4 7 22
+#> 5 8 16
+#> 6 9 10
 
-
-create_layer_temp(fun_name = "geom_point2",
+create_layer_temp(fun_name = "geom_point_zero_xy_defaults",
                            compute_group = compute_group_point,
                            required_aes = character(),
                            default_aes = aes(x = NULL, y = NULL),
@@ -469,34 +428,16 @@ create_layer_temp(fun_name = "geom_point2",
 
 
 ggplot(cars) + 
-  geom_point2(alpha = .7)
-```
-
-![](man/figures/README-unnamed-chunk-9-1.png)<!-- -->
-
-``` r
+  geom_point_zero_xy_defaults(alpha = .7)
 
 last_plot() +
-  aes(x = speed) 
-```
-
-![](man/figures/README-unnamed-chunk-9-2.png)<!-- -->
-
-``` r
+  aes(x = speed)
 
 last_plot() + 
   aes(y = dist)
 ```
 
-![](man/figures/README-unnamed-chunk-9-3.png)<!-- -->
-
-``` r
-
-last_plot() + 
-  aes(x = "all")
-```
-
-![](man/figures/README-unnamed-chunk-9-4.png)<!-- -->
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="33%" /><img src="man/figures/README-unnamed-chunk-9-2.png" width="33%" /><img src="man/figures/README-unnamed-chunk-9-3.png" width="33%" />
 
 <!-- ### a cute musical example... -->
 
@@ -704,8 +645,6 @@ last_plot() +
 <!-- # Dates extension example - geom progression -->
 
 ``` r
-
-
 compute_group_progression <- function(data, scales){
   
   data |>
@@ -721,6 +660,7 @@ create_layer_temp(fun_name = "stat_progression",
                   geom_default = "segment")
 
 
+# A some point this illustrated a problem for me.  But cannot articulate now.  I think I wanted to make the arrow argument available to the user, but it failed.
 geom_progression <- function(...){
   
   stat_progression(arrow = arrow(ends = "last", length = unit(.1, "in")),...)
@@ -760,48 +700,6 @@ data.frame(long =  c(0.596, 0.641, 0.695, 0.741, 0.788, 0.837,
 ```
 
 ![](man/figures/README-unnamed-chunk-12-2.png)<!-- -->
-
-# prop
-
-``` r
-setup_data_prop <- function(data, params){
-  
-  data |>
-    mutate(x = paste("test", x))
-  
-}
-
-
-compute_panel_prop <- function(data, scales, true_case = "Yes"){
-  
-  if(is.null(data$weight)){data$weight <- 1}
-  
-  data |>
-    group_by(x) |>
-    summarise(y = sum(weight)) |>
-    mutate(x_num_lab = as.numeric(x == true_case)) |>
-    mutate(x = as.numeric(x)) |>
-    mutate(x = factor(paste(x, x_num_lab)) )
-  
-}
-
-# Titanic |> 
-#   data.frame() |>
-#   summarise(weight = Freq, x = Survived) |>
-#   compute_panel_prop()
-# 
-# 
-# create_layer_temp("geom_prop",
-#                   setup_data = setup_data_prop,
-#                   compute_panel = compute_panel_prop,
-#                   geom = "col")
-# 
-# Titanic |> 
-#   data.frame() |>
-#   ggplot() + 
-#   aes(x = Survived, weight = Freq) + 
-#   geom_prop()
-```
 
 <!-- # in 100 -->
 
@@ -1003,9 +901,9 @@ ggnorthcarolina::northcarolina_county_flat |>
               color = "oldlace")
 ```
 
-![](man/figures/README-unnamed-chunk-14-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-13-1.png)<!-- -->
 
-# define\_layer\_sf\_temp build
+# define\_layer\_sf\_temp build. Let’s go\!
 
 ``` r
 northcarolina_county_reference0 <-
@@ -1054,6 +952,9 @@ define_layer_sf_temp <- function(ref_df,
                                  required_aes, 
                                  default_aes = ggplot2::aes(),
                                  stamp = FALSE,
+                                 keep_default = NULL,
+                                 drop_default = NULL,
+                                 id_col_name = NULL, # for keep drop
                                  mapping = NULL,
                                  data = NULL,
                                  position = "identity",
@@ -1063,7 +964,8 @@ define_layer_sf_temp <- function(ref_df,
                                  crs = sf::st_crs(ref_df),
                                  ...){
 
-
+   
+  
 ref_df_w_bb_and_xy_centers <- 
   ref_df |>
   dplyr::mutate(bb =
@@ -1073,29 +975,18 @@ ref_df_w_bb_and_xy_centers <-
   data.frame() |>
   add_xy_coords()
 
-  ref_df_w_bb_and_xy_centers$id_col <- ref_df_w_bb_and_xy_centers[,1]
+  if(is.null(id_col_name)){id_col_name <- 1}
+  ref_df_w_bb_and_xy_centers$id_col <- ref_df[,id_col_name]
 
-
-
-compute_panel_geo <- function(data, scales, keep = NULL, drop = c()){
+compute_panel_geo <- function(data, scales, keep_id = keep_default, drop_id = drop_default){
   
-  if(!stamp){
+  if(!is.null(keep_id)){ data <- filter(data, id_col %in% keep_id) }
+  if(!is.null(drop_id)){ data <- filter(data, !(id_col %in% drop_id)) }
   
-  out <- data |> 
-    dplyr::inner_join(ref_df_w_bb_and_xy_centers) |>
-    filter(!(id_col %in% drop))
-
+  if(!stamp){data <- dplyr::inner_join(data, ref_df_w_bb_and_xy_centers)}
+  if( stamp){data <- ref_df_w_bb_and_xy_centers }
   
-  }
-  
-  if(stamp){
-  
-  out <- ref_df_w_bb_and_xy_centers |>
-    filter(!(id_col %in% drop))
-    
-  }
-  
-  out
+  data
   
 }
 
@@ -1130,7 +1021,7 @@ StatTempsf <- ggplot2::ggproto(`_class` = "StatTempsf",
 ### Try it out
 
 ``` r
- sf::st_read(system.file("shape/nc.shp", package="sf")) |>
+sf::st_read(system.file("shape/nc.shp", package="sf")) |>
   dplyr::rename(county_name = NAME,
                 fips = FIPS) |>
   dplyr::select(county_name, fips, geometry) ->
@@ -1162,7 +1053,7 @@ ggnorthcarolina::northcarolina_county_flat |>
                color = "pink")
 ```
 
-![](man/figures/README-unnamed-chunk-16-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
   
@@ -1170,17 +1061,17 @@ last_plot() +
   aes(label = BIR74)
 ```
 
-![](man/figures/README-unnamed-chunk-16-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-15-2.png)<!-- -->
 
 ``` r
 
 
 last_plot() +
   geom_county2(geom = "text", 
-              mapping = aes(label = BIR74))  #oh! 
+              mapping = aes(label = BIR74), check_overlap = T)  #oh! 
 ```
 
-![](man/figures/README-unnamed-chunk-16-3.png)<!-- -->
+![](man/figures/README-unnamed-chunk-15-3.png)<!-- -->
 
 ``` r
 create_layer_sf_temp <- function(ref_df, 
@@ -1188,6 +1079,8 @@ create_layer_sf_temp <- function(ref_df,
                                  required_aes, 
                                  default_aes = ggplot2::aes(),
                                  geom_default = ggplot2::GeomSf,
+                                 keep_default = NULL,
+                                 drop_default = NULL,
                                  ...){
 
   assign(x = fun_name, 
@@ -1198,6 +1091,8 @@ create_layer_sf_temp <- function(ref_df,
     required_aes = required_aes,
     geom_default = geom_default,
     default_aes = default_aes,
+    keep = keep_default, 
+    drop = drop_default,
     ...)  },
   pos = 1
   )
@@ -1236,20 +1131,17 @@ ggnorthcarolina::northcarolina_county_flat |>
               mapping = aes(label = BIR74)) # oh ho!!
 ```
 
-![](man/figures/README-unnamed-chunk-17-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
 
-ggnorthcarolina::northcarolina_county_flat |> 
+ggnorthcarolina::northcarolina_county_flat |>
   ggplot() + 
   aes(fips = fips) + 
-  geom_county()  + 
-  aes(fill = SID74/BIR74) + 
-  geom_county(geom = "text", color = "pink",
-              check_overlap = T)
+  geom_county(stamp = T)
 ```
 
-![](man/figures/README-unnamed-chunk-17-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-16-2.png)<!-- -->
 
 ``` r
 library(tmap)
@@ -1289,7 +1181,7 @@ NLD_prov |>
   aes(fill = pop_15_24) 
 ```
 
-![](man/figures/README-unnamed-chunk-18-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
 
@@ -1309,7 +1201,7 @@ NLD_muni |>
   ggstamp::theme_void_fill("grey")
 ```
 
-![](man/figures/README-unnamed-chunk-18-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-17-2.png)<!-- -->
 
 <!-- # for brain example, stamp? -->
 
@@ -1393,7 +1285,7 @@ gapminder::gapminder |>
                check_overlap =T)
 ```
 
-![](man/figures/README-unnamed-chunk-19-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-18-1.png)<!-- -->
 
 ``` r
 
@@ -1414,7 +1306,7 @@ heritage |>
   geom_country(geom = "text", mapping = aes(label = paste(country, count, sep = "\n")))
 ```
 
-![](man/figures/README-unnamed-chunk-19-2.png)<!-- -->
+![](man/figures/README-unnamed-chunk-18-2.png)<!-- -->
 
 # Part II. Packaging and documentation 🚧 ✅
 
@@ -1498,7 +1390,7 @@ ggplot(cars) +
   geom_circle_points()
 ```
 
-![](man/figures/README-unnamed-chunk-24-1.png)<!-- -->
+![](man/figures/README-unnamed-chunk-23-1.png)<!-- -->
 
   - Bit H. Chosen a license? 🚧 ✅
 
